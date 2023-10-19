@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/taylan/repos/ceng477-homeworks/HW1/build",
+  "command": "/usr/lib64/ccache/g++ -g -std=gnu++11 -O3 -o CMakeFiles/raytracer.dir/parser.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW1/parser.cpp",
+  "file": "/home/taylan/repos/ceng477-homeworks/HW1/parser.cpp",
+  "output": "CMakeFiles/raytracer.dir/parser.cpp.o"
+},
+{
+  "directory": "/home/taylan/repos/ceng477-homeworks/HW1/build",
+  "command": "/usr/lib64/ccache/g++ -g -std=gnu++11 -O3 -o CMakeFiles/raytracer.dir/ppm.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW1/ppm.cpp",
+  "file": "/home/taylan/repos/ceng477-homeworks/HW1/ppm.cpp",
+  "output": "CMakeFiles/raytracer.dir/ppm.cpp.o"
+},
+{
+  "directory": "/home/taylan/repos/ceng477-homeworks/HW1/build",
+  "command": "/usr/lib64/ccache/g++ -g -std=gnu++11 -O3 -o CMakeFiles/raytracer.dir/raytracer.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW1/raytracer.cpp",
+  "file": "/home/taylan/repos/ceng477-homeworks/HW1/raytracer.cpp",
+  "output": "CMakeFiles/raytracer.dir/raytracer.cpp.o"
+},
+{
+  "directory": "/home/taylan/repos/ceng477-homeworks/HW1/build",
+  "command": "/usr/lib64/ccache/g++ -g -std=gnu++11 -O3 -o CMakeFiles/raytracer.dir/tinyxml2.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW1/tinyxml2.cpp",
+  "file": "/home/taylan/repos/ceng477-homeworks/HW1/tinyxml2.cpp",
+  "output": "CMakeFiles/raytracer.dir/tinyxml2.cpp.o"
+}
+]
