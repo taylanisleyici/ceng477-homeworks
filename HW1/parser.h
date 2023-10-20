@@ -3,20 +3,14 @@
 
 #include <string>
 #include <vector>
+#include "Vec3D.h"
 
 namespace parser
 {
-    //Notice that all the structures are as simple as possible
-    //so that you are not enforced to adopt any style or design.
-    struct Vec3f
-    {
-        float x, y, z;
-    };
 
-    struct Vec3i
-    {
-        int x, y, z;
-    };
+    // Notice that all the structures are as simple as possible
+    // so that you are not enforced to adopt any style or design.
+    
 
     struct Vec4f
     {
@@ -25,9 +19,9 @@ namespace parser
 
     struct Camera
     {
-        Vec3f position;
-        Vec3f gaze;
-        Vec3f up;
+        Vec3D<double> position;
+        Vec3D<double> gaze;
+        Vec3D<double> up;
         Vec4f near_plane;
         float near_distance;
         int image_width, image_height;
@@ -36,17 +30,17 @@ namespace parser
 
     struct PointLight
     {
-        Vec3f position;
-        Vec3f intensity;
+        Vec3D<double> position;
+        Vec3D<double> intensity;
     };
 
     struct Material
     {
         bool is_mirror;
-        Vec3f ambient;
-        Vec3f diffuse;
-        Vec3f specular;
-        Vec3f mirror;
+        Vec3D<double> ambient;
+        Vec3D<double> diffuse;
+        Vec3D<double> specular;
+        Vec3D<double> mirror;
         float phong_exponent;
     };
 
@@ -57,16 +51,16 @@ namespace parser
         int v2_id;
     };
 
-    struct Mesh
-    {
-        int material_id;
-        std::vector<Face> faces;
-    };
-
     struct Triangle
     {
         int material_id;
         Face indices;
+    };
+
+    struct Mesh
+    {
+        int material_id;
+        std::vector<Triangle> faces;
     };
 
     struct Sphere
@@ -78,20 +72,20 @@ namespace parser
 
     struct Scene
     {
-        //Data
-        Vec3i background_color;
+        // Data
+        Vec3D<long> background_color;
         float shadow_ray_epsilon;
         int max_recursion_depth;
         std::vector<Camera> cameras;
-        Vec3f ambient_light;
+        Vec3D<double> ambient_light;
         std::vector<PointLight> point_lights;
         std::vector<Material> materials;
-        std::vector<Vec3f> vertex_data;
+        std::vector<Vec3D<double>> vertex_data;
         std::vector<Mesh> meshes;
         std::vector<Triangle> triangles;
         std::vector<Sphere> spheres;
 
-        //Functions
+        // Functions
         void loadFromXml(const std::string &filepath);
     };
 }
