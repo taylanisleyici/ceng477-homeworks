@@ -18,6 +18,12 @@ public:
     }
     
     template <typename U>
+    friend Vec3D<decltype(T{} + U{})> operator-(const Vec3D<T> &lhs, const Vec3D<U> &rhs)
+    {
+        return Vec3D<decltype(T{} + U{})>(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+    }
+
+    template <typename U>
     friend Vec3D<decltype(T{} + U{})> operator*(const U &lhs, const Vec3D<T> &rhs)
     {
         return Vec3D<decltype(T{} + U{})>(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z);

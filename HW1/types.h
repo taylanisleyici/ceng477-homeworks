@@ -3,9 +3,11 @@
 
 using namespace parser;
 
+typedef Vec3D<double> Point;
+
 struct IntersectionPoint
 {
-    Vec3D<double> point;
+    Point point;
     Face *face;
     Sphere *sphere;
     bool isSphere;

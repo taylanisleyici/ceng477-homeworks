@@ -23,12 +23,15 @@ double magnitude(const Vec3D<T> &a)
 template <typename T>
 Vec3D<double> unitVector(const Vec3D<T> &a)
 {
-    double magnitude = magnitude(a);
-    return Vec3D<double>(a.x / magnitude, a.y / magnitude, a.z / magnitude);
+    double mag = magnitude(a);
+    return a/mag;
 }
 
 
 
 template class Vec3D<double>;
 template class Vec3D<long>;
+template Vec3D<double> unitVector(const Vec3D<long> &a);
+template Vec3D<double> unitVector(const Vec3D<double> &a);
+template double magnitude(const Vec3D<double> &a);
 
