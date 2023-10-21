@@ -3,6 +3,16 @@
 #include <sstream>
 #include <stdexcept>
 
+void parser::Scene::calculateNormal(parser::Triangle &triangle)
+{
+    Vec3D<double> a,b,c;
+    a = vertex_data[triangle.indices.v0_id];
+    b = vertex_data[triangle.indices.v1_id];
+    c = vertex_data[triangle.indices.v2_id];
+    auto u = c - a;
+    auto v = c - b;
+    triangle.normal = crossProduct(u,v);
+}
 
 void parser::Scene::loadFromXml(const std::string &filepath)
 {
@@ -170,6 +180,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
             stream >> face.v1_id >> face.v2_id;
             faceTriangle.material_id = mesh.material_id;
             faceTriangle.indices = face;
+            calculateNormal(faceTriangle);
             mesh.faces.push_back(faceTriangle);
         }
         stream.clear();

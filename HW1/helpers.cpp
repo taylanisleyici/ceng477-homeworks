@@ -10,15 +10,61 @@ Ray3D generateRay(Point startingPoint, Point targetPoint)
     return ray;
 }
 
-IntersectionPoint intersectRay(Ray3D ray, Scene *scene)
+IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
 {
     IntersectionPoint returnPoint;
-    double shortestDistance = numeric_limits<double>::max();
+    IntersectionPoint currentPoint;
+    returnPoint.distance(numeric_limits<double>::max());
+    currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles);
+    if (currentPoint.distance < returnPoint.distance) returnPoint = currentPoint;
+    for (size_t i = 0; i < scene.meshes.size(); i++)
+    {
+        currentPoint = triangleArrayIntersectionHelper(ray, scene.meshes[i].faces, scene);
+        if (currentPoint.distance < returnPoint.distance) returnPoint = currentPoint;
+    }
+    return returnPoint;
 }
 
-pair<Triangle, double> triangleVectorIntersectionHelper(Ray3D ray, const std::vector<Triangle> &triangles)
+IntersectionPoint triangleArrayIntersectionHelper(const Ray3D &ray, const std::vector<Triangle> &triangles, const Scene &scene)
 {
-    return pair<Triangle, double>();
+    IntersectionPoint returnPoint;
+    IntersectionPoint currentPoint;
+    returnPoint.distance = numeric_limits<double>::max();
+    for (size_t i = 0; i < triangles.size; i++)
+    {
+        currentPoint = rayTriangleIntersection(ray, triangles[i], scene);
+        if (currentPoint.distance < returnPoint.distance)
+        {
+            returnPoint = currentPoint;
+        }
+    }
+    return returnPoint;
+}
+
+IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &triangle, const Scene &scene)
+{
+    // We should create a Ax = B equation
+    // B is origin of ray - triangle's 3rd Vertex
+    // A is triangle's 1st vertex - 3rd, 2nd - 3rd, - ray's d
+    Vec3D<double> a,b,c;
+    a = scene.vertex_data[triangle.indices.v0_id];
+    b = scene.vertex_data[triangle.indices.v1_id];
+    c = scene.vertex_data[triangle.indices.v2_id];
+    vector<Vec3D<double>> A = {a-c, b-c, -ray.d};
+    Vec3D<double> B = ray.o - c;
+
+    Vec3D<double> alphaBetaT = cramer(A, B); // Alpha, Beta, T
+    IntersectionPoint returnPoint;
+    if (alphaBetaT.z = numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1)
+    {
+        returnPoint.distance = numeric_limits<double>::max();
+        return returnPoint;
+    }
+    
+    returnPoint.point = alphaBetaT.z * ray.d + ray.o;
+    returnPoint.triangle = &triangle;
+    returnPoint.distance = alphaBetaT.z;
+    return returnPoint;
 }
 
 double determinant(vector<Vec3D<double>> matrix)
@@ -42,10 +88,9 @@ Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b)//Ax
     double detOfA = determinant(a);
     if (detOfA == 0)
     {
-        result.z = numeric_limits<long>::max();
+        result.z = numeric_limits<double>::max();
         return result;
     }
-
 
     vector<Vec3D<double>> placeHolder(a);
     placeHolder[0] = b;
@@ -59,13 +104,13 @@ Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b)//Ax
     return result;
 }
 
-Ray3D computeRay(Vec3D<double> e, int i, int j, float distance, Vec3D<double> u, Vec3D<double> v, Vec3D<double> w, Vec4D plane, int width, int height)
+Ray3D computeRay(Vec3D<double> cameraPosition, int i, int j, float distance, Vec3D<double> u, Vec3D<double> v, Vec3D<double> w, Vec4D plane, int width, int height)
 {
-    Vec3D<double> m = e + (opposite(w) * distance);
+    Vec3D<double> m = cameraPosition + (opposite(w) * distance);
     Vec3D<double> q = m + (u * plane.x) + (v * plane.w);
     double s_u = (i + 0.5) * (plane.y - plane.x) / width;
     double s_v = (j + 0.5) * (plane.w - plane.z) / height;
     Vec3D<double> s = q + (s_u * u) - (s_v * v);
 
-    return generateRay(e, (s-e));
+    return generateRay(cameraPosition, (s-cameraPosition));
 }

@@ -54,6 +54,7 @@ namespace parser
     struct Triangle
     {
         int material_id;
+        Vec3D<double> normal;
         Face indices;
     };
 
@@ -87,6 +88,7 @@ namespace parser
 
         // Functions
         void loadFromXml(const std::string &filepath);
+        void calculateNormal(parser::Triangle &triangle);
     };
 }
 
