@@ -23,6 +23,16 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
         if (currentPoint.distance < returnPoint.distance) 
         {
             returnPoint = currentPoint;
+            returnPoint.isSphere = false;
+        }
+    }
+    for (size_t i = 0; i < scene.spheres.size(); i++)
+    {
+        currentPoint = raySphereIntersection(ray, scene.spheres[i], scene);
+        if (currentPoint.distance < returnPoint.distance)
+        {
+            returnPoint = currentPoint;
+            returnPoint.isSphere = true;
         }
     }
     return returnPoint;
@@ -39,6 +49,7 @@ IntersectionPoint triangleArrayIntersectionHelper(const Ray3D &ray, const std::v
         if (currentPoint.distance < returnPoint.distance)
         {
             returnPoint = currentPoint;
+            returnPoint.isSphere = false;
         }
     }
     return returnPoint;
@@ -67,7 +78,65 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
     returnPoint.point = alphaBetaT.z * ray.d + ray.o;
     returnPoint.triangle = &triangle;
     returnPoint.distance = alphaBetaT.z;
+    returnPoint.isSphere = false;
     return returnPoint;
+}
+
+IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, const Scene &scene)
+{
+    IntersectionPoint returnPoint;
+    returnPoint.distance = numeric_limits<double>::max();
+    Vec3D<double> center = scene.vertex_data[sphere.center_vertex_id - 1];
+    double radius = sphere.radius;
+    Vec3D<double> temp = ray.o - center;
+    double a = dotProduct(ray.d, ray.d);
+    double b = 2 * dotProduct(ray.d, temp);
+    double c = dotProduct(temp, temp) - radius * radius;
+    double delta = (b * b) - (4 * a * c);
+    if (delta < 0)
+    {
+        returnPoint.distance = numeric_limits<double>::max();
+        return returnPoint;
+    }
+    double t1 = (-b + sqrt(delta)) / (2 * a);
+    double t2 = (-b - sqrt(delta)) / (2 * a);
+    if (t1 < 0 && t2 < 0)
+    {
+        returnPoint.distance = numeric_limits<double>::max();
+        return returnPoint;
+    }
+    if (t1 < 0)
+    {
+        returnPoint.distance = t2;
+        returnPoint.point = ray.o + (t2 * ray.d);
+        returnPoint.sphere = &sphere;
+        returnPoint.isSphere = true;
+        return returnPoint;
+    }
+    if (t2 < 0)
+    {
+        returnPoint.distance = t1;
+        returnPoint.point = ray.o + (t1 * ray.d);
+        returnPoint.sphere = &sphere;
+        returnPoint.isSphere = true;
+        return returnPoint;
+    }
+    if (t1 < t2)
+    {
+        returnPoint.distance = t1;
+        returnPoint.point = ray.o + (t1 * ray.d);
+        returnPoint.sphere = &sphere;
+        returnPoint.isSphere = true;
+        return returnPoint;
+    }
+    else
+    {
+        returnPoint.distance = t2;
+        returnPoint.point = ray.o + (t2 * ray.d);
+        returnPoint.sphere = &sphere;
+        returnPoint.isSphere = true;
+        return returnPoint;
+    }
 }
 
 double determinant(vector<Vec3D<double>> matrix)
