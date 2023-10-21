@@ -22,7 +22,7 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene)
     }
     //TODO
     //TEST
-    Material nearestMaterial = scene.materials[nearestIntersection.triangle->material_id - 1];
+    Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
     Vec3D<double> colorDouble =255 * nearestMaterial.diffuse;
     unsigned char R,G,B;
     R = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5);
@@ -46,7 +46,7 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene)
     {
         for (size_t k = 0; k < width; k++)
         {
-            Ray3D ray = computeRay(camera.position, j, k, camera.near_distance, u, v, w, camera.near_plane, width, height);
+            Ray3D ray = computeRay(camera.position, k, j, camera.near_distance, u, v, w, camera.near_plane, width, height);
             auto pixelValues = calculatePixelOfRay(ray, scene);
             image[i++] = pixelValues.x;
             image[i++] = pixelValues.y;
