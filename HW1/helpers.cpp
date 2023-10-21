@@ -14,8 +14,8 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
 {
     IntersectionPoint returnPoint;
     IntersectionPoint currentPoint;
-    returnPoint.distance(numeric_limits<double>::max());
-    currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles);
+    returnPoint.distance = numeric_limits<double>::max();
+    currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
     if (currentPoint.distance < returnPoint.distance) returnPoint = currentPoint;
     for (size_t i = 0; i < scene.meshes.size(); i++)
     {
@@ -30,7 +30,7 @@ IntersectionPoint triangleArrayIntersectionHelper(const Ray3D &ray, const std::v
     IntersectionPoint returnPoint;
     IntersectionPoint currentPoint;
     returnPoint.distance = numeric_limits<double>::max();
-    for (size_t i = 0; i < triangles.size; i++)
+    for (size_t i = 0; i < triangles.size(); i++)
     {
         currentPoint = rayTriangleIntersection(ray, triangles[i], scene);
         if (currentPoint.distance < returnPoint.distance)

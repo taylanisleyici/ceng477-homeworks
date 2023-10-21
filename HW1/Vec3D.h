@@ -40,6 +40,10 @@ public:
     {
         return Vec3D<double>((double)lhs.x / rhs, (double)lhs.y / rhs, (double)lhs.z / rhs);
     }
+
+    Vec3D<T> operator-() const {
+        return Vec3D<T>(-x, -y, -z);
+    }
 };
 
 template <typename T, typename U>

@@ -10,8 +10,8 @@ class IntersectionPoint
 {
 public:
     Point point;
-    Triangle *triangle;
-    Sphere *sphere;
+    const Triangle *triangle;
+    const Sphere *sphere;
     double distance;
     bool isSphere;
 };
