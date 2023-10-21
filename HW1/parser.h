@@ -14,7 +14,7 @@ namespace parser
 
     struct Vec4D
     {
-        float x, y, z, w;
+        double x, y, z, w;
     };
 
     struct Camera

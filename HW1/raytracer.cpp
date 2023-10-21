@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
     for(int i = 0; i < scene.cameras.size(); i++)
     {
-        Camera cam = cam;
+        Camera cam = scene.cameras[i];
         Vec3D<double> v = cam.up;
         Vec3D<double> w = opposite(cam.gaze);
         Vec3D<double> u = crossProduct(v, w);
