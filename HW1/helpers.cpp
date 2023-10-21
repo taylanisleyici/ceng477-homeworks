@@ -50,12 +50,12 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
     a = scene.vertex_data[triangle.indices.v0_id];
     b = scene.vertex_data[triangle.indices.v1_id];
     c = scene.vertex_data[triangle.indices.v2_id];
-    vector<Vec3D<double>> A = {a-c, b-c, -ray.d};
-    Vec3D<double> B = ray.o - c;
+    vector<Vec3D<double>> A = {a-b, a-c, ray.d};
+    Vec3D<double> B = a - ray.o;
 
     Vec3D<double> alphaBetaT = cramer(A, B); // Alpha, Beta, T
     IntersectionPoint returnPoint;
-    if (alphaBetaT.z = numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1)
+    if (alphaBetaT.z == numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
@@ -112,5 +112,5 @@ Ray3D computeRay(Vec3D<double> cameraPosition, int i, int j, float distance, Vec
     double s_v = (j + 0.5) * (plane.w - plane.z) / height;
     Vec3D<double> s = q + (s_u * u) - (s_v * v);
 
-    return generateRay(cameraPosition, (s-cameraPosition));
+    return generateRay(cameraPosition, s);
 }

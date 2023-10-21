@@ -29,14 +29,13 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene)
         for (int k = 0; k < width; k++)
         {
             Ray3D ray = computeRay(camera.position, j, k, camera.near_distance, u, v, w, camera.near_plane, width, height);
-
         }
     }
 }
 
 int main(int argc, char *argv[])
 {
-    // Sample usage for reading an XML scene file
+    Sample usage for reading an XML scene file
     parser::Scene scene;
 
     scene.loadFromXml("./inputs/simple.xml");
