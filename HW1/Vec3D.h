@@ -64,4 +64,7 @@ Vec3D<double> unitVector(const Vec3D<T> &a);
 template <typename T>
 double magnitude(const Vec3D<T> &a);
 
+template <typename T>
+Vec3D<double> opposite(const Vec3D<T> &a);
+
 #endif

@@ -12,9 +12,9 @@ namespace parser
     // so that you are not enforced to adopt any style or design.
     
 
-    struct Vec4f
+    struct Vec4D
     {
-        float x, y, z, w;
+        double x, y, z, w;
     };
 
     struct Camera
@@ -22,7 +22,7 @@ namespace parser
         Vec3D<double> position;
         Vec3D<double> gaze;
         Vec3D<double> up;
-        Vec4f near_plane;
+        Vec4D near_plane;
         float near_distance;
         int image_width, image_height;
         std::string image_name;

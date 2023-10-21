@@ -11,6 +11,17 @@ using namespace std;
 
 typedef unsigned char RGB[3];
 
+Ray3D computeRay(Vec3D<double> e, int i, int j, float distance, Vec3D<double> u, Vec3D<double> v, Vec3D<double> w, Vec4D plane, int width, int height)
+{
+    Vec3D<double> m = e + (opposite(w) * distance);
+    Vec3D<double> q = m + (u * plane.x) + (v * plane.w);
+    double s_u = (i + 0.5) * (plane.y - plane.x) / width;
+    double s_v = (j + 0.5) * (plane.w - plane.z) / height;
+    Vec3D<double> s = q + (s_u * u) - (s_v * v);
+
+    return generateRay(e, (s-e));
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -20,27 +31,32 @@ int main(int argc, char* argv[])
     scene.loadFromXml("./inputs/simple.xml");
 
 
+    int light_count = scene.point_lights.size();
 
-    // The code below creates a test pattern and writes
-    // it to a PPM file to demonstrate the usage of the
-    // ppm_write function.
-    //
-    // Normally, you would be running your ray tracing
-    // code here to produce the desired image.
-    // Vec3D<double> a(1.2,2.3,3.4);
-    // Vec3D<long> b(4,5,6);
-    // auto c = a * 3;
-    // auto c2 = 3 * a;
-    // auto f = b*3.1;
-    // auto f2 = 3.1*b;
-    // auto f3 = b/3;
-    // auto d = dotProduct(a, b);
-    // auto e = crossProduct(a, b);
-    Vec3D<double> a(1,-1,0);
-    Vec3D<double> b(1,1,0);
-    Vec3D<double> c(0,0,-0.5);
-    Vec3D<double> d(1,1,1);
-    vector<Vec3D<double>> det = {a,b,c};
-    Vec3D<double> result = cramer(det, d);
+    for(int i = 0; i < scene.cameras.size(); i++)
+    {
+        Camera cam = scene.cameras[i];
+        Vec3D<double> v = cam.up;
+        Vec3D<double> w = opposite(cam.gaze);
+        Vec3D<double> u = crossProduct(v, w);
+
+        int height = cam.image_height;
+        int width = cam.image_width;
+
+        for(int j = 0; j < height; j++)
+        {
+            for(int k = 0; k < width; k++)
+            {
+                Ray3D ray = computeRay(cam.position, j, k, cam.near_distance, u, v, w, cam.near_plane, width, height);
+
+                // Check for intersection with each triangle
+            }
+        }
+        
+
+            
+    }
+
+
     return 0;
 }
