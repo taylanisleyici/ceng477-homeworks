@@ -58,3 +58,14 @@ Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b)//Ax
     result.z = determinant(placeHolder) / detOfA;
     return result;
 }
+
+Ray3D computeRay(Vec3D<double> e, int i, int j, float distance, Vec3D<double> u, Vec3D<double> v, Vec3D<double> w, Vec4D plane, int width, int height)
+{
+    Vec3D<double> m = e + (opposite(w) * distance);
+    Vec3D<double> q = m + (u * plane.x) + (v * plane.w);
+    double s_u = (i + 0.5) * (plane.y - plane.x) / width;
+    double s_v = (j + 0.5) * (plane.w - plane.z) / height;
+    Vec3D<double> s = q + (s_u * u) - (s_v * v);
+
+    return generateRay(e, (s-e));
+}
