@@ -20,7 +20,10 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
     for (size_t i = 0; i < scene.meshes.size(); i++)
     {
         currentPoint = triangleArrayIntersectionHelper(ray, scene.meshes[i].faces, scene);
-        if (currentPoint.distance < returnPoint.distance) returnPoint = currentPoint;
+        if (currentPoint.distance < returnPoint.distance) 
+        {
+            returnPoint = currentPoint;
+        }
     }
     return returnPoint;
 }
@@ -47,15 +50,15 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
     // B is origin of ray - triangle's 3rd Vertex
     // A is triangle's 1st vertex - 3rd, 2nd - 3rd, - ray's d
     Vec3D<double> a,b,c;
-    a = scene.vertex_data[triangle.indices.v0_id];
-    b = scene.vertex_data[triangle.indices.v1_id];
-    c = scene.vertex_data[triangle.indices.v2_id];
+    a = scene.vertex_data[triangle.indices.v0_id - 1];
+    b = scene.vertex_data[triangle.indices.v1_id - 1];
+    c = scene.vertex_data[triangle.indices.v2_id - 1];
     vector<Vec3D<double>> A = {a-b, a-c, ray.d};
     Vec3D<double> B = a - ray.o;
 
     Vec3D<double> alphaBetaT = cramer(A, B); // Alpha, Beta, T
     IntersectionPoint returnPoint;
-    if (alphaBetaT.z == numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1)
+    if (alphaBetaT.z == numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1 || alphaBetaT.x + alphaBetaT.y > 1)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
@@ -72,6 +75,7 @@ double determinant(vector<Vec3D<double>> matrix)
     if (matrix.size()!=3)
     {
         cout << "PAT" << endl;
+        return 0;
     }
 
     double col1, col2, col3;
@@ -106,7 +110,7 @@ Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b)//Ax
 
 Ray3D computeRay(Vec3D<double> cameraPosition, int i, int j, float distance, Vec3D<double> u, Vec3D<double> v, Vec3D<double> w, Vec4D plane, int width, int height)
 {
-    Vec3D<double> m = cameraPosition + (opposite(w) * distance);
+    Vec3D<double> m = cameraPosition + (-w * distance);
     Vec3D<double> q = m + (u * plane.x) + (v * plane.w);
     double s_u = (i + 0.5) * (plane.y - plane.x) / width;
     double s_v = (j + 0.5) * (plane.w - plane.z) / height;
