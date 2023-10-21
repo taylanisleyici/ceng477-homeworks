@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 
+
 void parser::Scene::loadFromXml(const std::string &filepath)
 {
     tinyxml2::XMLDocument file;
@@ -142,7 +143,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     //Get VertexData
     element = root->FirstChildElement("VertexData");
     stream << element->GetText() << std::endl;
-    Vec3f vertex;
+    Vec3D<double> vertex;
     while (!(stream >> vertex.x).eof())
     {
         stream >> vertex.y >> vertex.z;
@@ -154,6 +155,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Mesh");
     Mesh mesh;
+    Triangle faceTriangle;
     while (element)
     {
         child = element->FirstChildElement("Material");
@@ -166,7 +168,9 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         while (!(stream >> face.v0_id).eof())
         {
             stream >> face.v1_id >> face.v2_id;
-            mesh.faces.push_back(face);
+            faceTriangle.material_id = mesh.material_id;
+            faceTriangle.indices = face;
+            mesh.faces.push_back(faceTriangle);
         }
         stream.clear();
 
