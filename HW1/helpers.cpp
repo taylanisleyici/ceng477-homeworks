@@ -68,8 +68,9 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
     Vec3D<double> B = a - ray.o;
 
     Vec3D<double> alphaBetaT = cramer(A, B); // Alpha, Beta, T
+    double epsilon = numeric_limits<double>::epsilon();
     IntersectionPoint returnPoint;
-    if (alphaBetaT.z == numeric_limits<double>::max() || alphaBetaT.z < 0 || alphaBetaT.x < 0 || alphaBetaT.x > 1 || alphaBetaT.y < 0 || alphaBetaT.y > 1 || alphaBetaT.x + alphaBetaT.y > 1)
+    if (alphaBetaT.z == numeric_limits<double>::max() || (alphaBetaT.z + epsilon) < 0 || (alphaBetaT.x + epsilon) < 0 || (alphaBetaT.x - epsilon) > 1 || (alphaBetaT.y + epsilon) < 0 || (alphaBetaT.y - epsilon) > 1 || (alphaBetaT.x + alphaBetaT.y - epsilon) > 1)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
