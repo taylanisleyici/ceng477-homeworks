@@ -189,3 +189,9 @@ Ray3D computeRay(Vec3D<double> cameraPosition, int i, int j, float distance, Vec
 
     return generateRay(cameraPosition, s);
 }
+
+Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c)
+{
+    Vec3D<double> normal = unitVector(p - c);
+    return normal;
+}
