@@ -6,12 +6,12 @@
 void parser::Scene::calculateNormal(parser::Triangle &triangle)
 {
     Vec3D<double> a,b,c;
-    a = vertex_data[triangle.indices.v0_id];
-    b = vertex_data[triangle.indices.v1_id];
-    c = vertex_data[triangle.indices.v2_id];
-    auto u = c - a;
-    auto v = c - b;
-    triangle.normal = crossProduct(u,v);
+    a = vertex_data[triangle.indices.v0_id - 1];
+    b = vertex_data[triangle.indices.v1_id - 1];
+    c = vertex_data[triangle.indices.v2_id - 1];
+    auto u = b - a;
+    auto v = c - a;
+    triangle.normal = unitVector(crossProduct(u,v));
 }
 
 void parser::Scene::loadFromXml(const std::string &filepath)

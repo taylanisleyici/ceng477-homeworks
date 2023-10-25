@@ -9,6 +9,53 @@
 using namespace std;
 using namespace parser;
 
+
+Vec3D<double> bimbimbambam(const Scene &scene, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
+{
+    // DIFFUSE BIMBIM BAMBAM
+    // for(size_t i = 0; i < scene.point_lights.size(); i++)
+    // {
+    PointLight light = scene.point_lights[0];
+    Vec3D<double> temp = light.position - nearestIntersection.point;
+    double distance = magnitude(temp) - scene.shadow_ray_epsilon;
+    Ray3D shadowRay = generateRay(light.position, nearestIntersection.point);
+
+    IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
+    if(shadowIntersection.distance < distance)
+    {
+        // Eyvah Oldu
+        // Gölge ??
+        Vec3D<double> shadow;
+        shadow.x = 0;
+        shadow.y = 0;
+        shadow.z = 0;
+        return shadow;
+    }
+
+    Vec3D<double> diffuse = nearestMaterial.diffuse;
+    Vec3D<double> intensity = light.intensity;
+    
+    Vec3D<double> normal;
+
+    if(nearestIntersection.isSphere)
+    {
+        normal = unitVector(nearestIntersection.point - scene.vertex_data[nearestIntersection.sphere->center_vertex_id - 1]);
+    }
+    else
+    {
+        normal = nearestIntersection.triangle->normal;
+    }
+    
+    double cos_theta = dotProduct(unitVector(temp), normal) < 0 ? 0 : dotProduct(unitVector(temp), normal);
+
+    Vec3D<double> color;
+    color.x = diffuse.x * intensity.x * cos_theta / (distance * distance);
+    color.y = diffuse.y * intensity.y * cos_theta / (distance * distance);
+    color.z = diffuse.z * intensity.z * cos_theta / (distance * distance);
+    return color;        
+    // }
+}
+
 Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene)
 {
     IntersectionPoint nearestIntersection = intersectRay(ray, scene);
@@ -23,11 +70,32 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene)
     //TODO
     //TEST
     Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
-    Vec3D<double> colorDouble =255 * nearestMaterial.diffuse;
-    unsigned char R,G,B;
-    R = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5);
-    G = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5); 
-    B = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5); 
+    double R,G,B;
+
+    Vec3D<double> colorDouble = bimbimbambam(scene, nearestIntersection, nearestMaterial);
+    
+    R = ((scene.ambient_light.x * nearestMaterial.ambient.x + colorDouble.x)) + 0.5;
+    G = ((scene.ambient_light.y * nearestMaterial.ambient.y + colorDouble.y)) + 0.5;
+    B = ((scene.ambient_light.z * nearestMaterial.ambient.z + colorDouble.z)) + 0.5;
+
+    if (R > 255)
+    {
+        R = 255;
+    }
+    if (G > 255)
+    {
+        G = 255;
+    }
+    if (B > 255)
+    {
+        B = 255;
+    }
+    
+    
+    // Vec3D<double> colorDouble =255 * nearestMaterial.diffuse;
+    // R = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5);
+    // G = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5); 
+    // B = (unsigned char) (colorDouble.x) + 0.5 - (colorDouble.x < 0.5); 
     return Vec3D<unsigned char>(R,G,B);
 }
 
@@ -46,6 +114,7 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene)
     {
         for (size_t k = 0; k < width; k++)
         {
+
             Ray3D ray = computeRay(camera.position, k, j, camera.near_distance, u, v, w, camera.near_plane, width, height);
             auto pixelValues = calculatePixelOfRay(ray, scene);
             image[i++] = pixelValues.x;
@@ -60,7 +129,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("./inputs/simple.xml");
+    scene.loadFromXml("./inputs/bunny.xml");
 
     int light_count = scene.point_lights.size();
 

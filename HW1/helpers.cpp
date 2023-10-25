@@ -90,6 +90,7 @@ IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, 
     Vec3D<double> center = scene.vertex_data[sphere.center_vertex_id - 1];
     double radius = sphere.radius;
     Vec3D<double> temp = ray.o - center;
+    double epsilon = numeric_limits<double>::epsilon();
     double a = dotProduct(ray.d, ray.d);
     double b = 2 * dotProduct(ray.d, temp);
     double c = dotProduct(temp, temp) - radius * radius;
@@ -101,12 +102,12 @@ IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, 
     }
     double t1 = (-b + sqrt(delta)) / (2 * a);
     double t2 = (-b - sqrt(delta)) / (2 * a);
-    if (t1 < 0 && t2 < 0)
+    if ((t1 + epsilon) < 0 && (t2 + epsilon) < 0)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
     }
-    if (t1 < 0)
+    if ((t1 + epsilon )< 0)
     {
         returnPoint.distance = t2;
         returnPoint.point = ray.o + (t2 * ray.d);
@@ -114,7 +115,7 @@ IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, 
         returnPoint.isSphere = true;
         return returnPoint;
     }
-    if (t2 < 0)
+    if ((t2 + epsilon) < 0)
     {
         returnPoint.distance = t1;
         returnPoint.point = ray.o + (t1 * ray.d);
