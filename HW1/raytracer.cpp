@@ -21,7 +21,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
     {
         // check shadow status !
         // this is common between diffuse and specular
-        
+
         PointLight light = scene.point_lights[i];
         Vec3D<double> temp = light.position - nearestIntersection.point;
         double distance = magnitude(temp) - scene.shadow_ray_epsilon;
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("./inputs/killeroo.xml");
+    scene.loadFromXml("./inputs/simple_shading.xml");
 
     int light_count = scene.point_lights.size();
 
