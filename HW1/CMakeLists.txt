@@ -14,6 +14,7 @@ set(SOURCE_FILES_RAYTRACER raytracer.cpp)
 set(SOURCE_FILES_MYVEC3D Vec3D.cpp Vec3D.h)
 set(SOURCE_FILES_HELPER helpers.cpp helpers.h)
 set(SOURCE_FILES_RAY3D Ray3D.cpp Ray3D.h)
+set(SOURCE_FILES_BVH BVH.cpp BVH.h)
 
 
 # Create individual library targets for each source file
@@ -23,11 +24,12 @@ add_library(tinyxml2_lib ${SOURCE_FILES_TINYXML2})
 add_library(myvec3d_lib ${SOURCE_FILES_MYVEC3D})
 add_library(helper_lib ${SOURCE_FILES_HELPER})
 add_library(ray_lib ${SOURCE_FILES_RAY3D})
+add_library(bvh_lib ${SOURCE_FILES_RAY3D})
 # Link the libraries to raytracer
 add_executable(raytracer ${SOURCE_FILES_RAYTRACER})
 
 # Specify the dependencies
-target_link_libraries(raytracer PRIVATE myvec3d_lib parser_lib ppm_lib tinyxml2_lib helper_lib ray_lib)
+target_link_libraries(raytracer PRIVATE myvec3d_lib parser_lib ppm_lib tinyxml2_lib helper_lib ray_lib bvh_lib)
 
 # Set optimization options for raytracer
 target_compile_options(raytracer PRIVATE)
