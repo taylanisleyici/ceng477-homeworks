@@ -15,17 +15,6 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
     IntersectionPoint returnPoint;
     IntersectionPoint currentPoint;
     returnPoint.distance = numeric_limits<double>::max();
-    currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
-    if (currentPoint.distance < returnPoint.distance) returnPoint = currentPoint;
-    for (size_t i = 0; i < scene.meshes.size(); i++)
-    {
-        currentPoint = triangleArrayIntersectionHelper(ray, scene.meshes[i].faces, scene);
-        if (currentPoint.distance < returnPoint.distance) 
-        {
-            returnPoint = currentPoint;
-            returnPoint.isSphere = false;
-        }
-    }
     for (size_t i = 0; i < scene.spheres.size(); i++)
     {
         currentPoint = raySphereIntersection(ray, scene.spheres[i], scene);
@@ -35,7 +24,57 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
             returnPoint.isSphere = true;
         }
     }
+    currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
+    if (currentPoint.distance < returnPoint.distance)
+    {
+        returnPoint = currentPoint;
+        returnPoint.isSphere = false;
+    } 
+    for (size_t i = 0; i < scene.meshes.size(); i++)
+    {
+        currentPoint = triangleArrayIntersectionHelper(ray, scene.meshes[i].faces, scene);
+        if (currentPoint.distance < returnPoint.distance) 
+        {
+            returnPoint = currentPoint;
+            returnPoint.isSphere = false;
+        }
+    }
     return returnPoint;
+}
+
+bool shadowIntersection(const Ray3D &ray, const Scene &scene, double distance)
+{
+    distance -= scene.shadow_ray_epsilon;
+
+    for(size_t i = 0; i < scene.spheres.size(); i++)
+    {
+        IntersectionPoint currentPoint = raySphereIntersection(ray, scene.spheres[i], scene);
+        if(currentPoint.distance < distance)
+        {
+            return true;
+        }
+    }
+    for(size_t i = 0; i < scene.triangles.size(); i++)
+    {
+        IntersectionPoint currentPoint = rayTriangleIntersection(ray, scene.triangles[i], scene);
+        if(currentPoint.distance < distance)
+        {
+            return true;
+        }
+    }
+    for(size_t i = 0; i < scene.meshes.size(); i++)
+    {
+        for(size_t j = 0; j < scene.meshes[i].faces.size(); j++)
+        {
+            IntersectionPoint currentPoint = rayTriangleIntersection(ray, scene.meshes[i].faces[j], scene);
+            if(currentPoint.distance < distance)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+
 }
 
 IntersectionPoint triangleArrayIntersectionHelper(const Ray3D &ray, const std::vector<Triangle> &triangles, const Scene &scene)

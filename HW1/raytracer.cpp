@@ -24,11 +24,15 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
 
         PointLight light = scene.point_lights[i];
         Vec3D<double> temp = light.position - nearestIntersection.point;
-        double distance = magnitude(temp) - scene.shadow_ray_epsilon;
+        double distance = magnitude(temp);
         Ray3D shadowRay = generateRay(light.position, nearestIntersection.point);
 
-        IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
-        if(shadowIntersection.distance < distance)
+        // costlier than it should be
+        // it checks for minimum distance
+        // but there is no need for minimum distance check
+        // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
+
+        if(shadowIntersection(shadowRay, scene, distance))
         {
             // Shadow Logic ??
             continue;
@@ -141,7 +145,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("./inputs/simple_shading.xml");
+    scene.loadFromXml(argv[1]);
 
     int light_count = scene.point_lights.size();
 

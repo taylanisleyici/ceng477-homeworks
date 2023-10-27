@@ -20,6 +20,7 @@ Ray3D computeRay(Vec3D<double> e, int i, int j, float distance, Vec3D<double> u,
 IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &triangle, const Scene &scene);
 IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, const Scene &scene);
 Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c);
+bool shadowIntersection(const Ray3D &ray, const Scene &scene, double distance);
 
 
 #endif
