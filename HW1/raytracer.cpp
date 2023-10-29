@@ -26,6 +26,11 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
     Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
     double R = 0,G = 0,B = 0;
 
+    // Ambient light
+    R = scene.ambient_light.x * nearestMaterial.ambient.x;
+    G = scene.ambient_light.y * nearestMaterial.ambient.y;
+    B = scene.ambient_light.z * nearestMaterial.ambient.z;
+
     if(nearestMaterial.is_mirror)
     {
         Vec3D<double> normal = findNormal(nearestIntersection, scene);
@@ -39,10 +44,11 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
     }
     Vec3D<double> colorDouble = shading(scene, camera, nearestIntersection, nearestMaterial);
     
-    R += ((scene.ambient_light.x * nearestMaterial.ambient.x + colorDouble.x)) + 0.5;
-    G += ((scene.ambient_light.y * nearestMaterial.ambient.y + colorDouble.y)) + 0.5;
-    B += ((scene.ambient_light.z * nearestMaterial.ambient.z + colorDouble.z)) + 0.5;
+    R += colorDouble.x + 0.5;
+    G += colorDouble.y + 0.5;
+    B += colorDouble.z + 0.5;
 
+    // clamp
     if (R > 255)
     {
         R = 255;
@@ -88,7 +94,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("inputs/simple_reflectance.xml");
+    scene.loadFromXml("inputs/mirror_spheres.xml");
 
     int light_count = scene.point_lights.size();
 
