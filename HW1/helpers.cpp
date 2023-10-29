@@ -234,3 +234,91 @@ Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c)
     Vec3D<double> normal = unitVector(p - c);
     return normal;
 }
+
+
+Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, const Material &nearestMaterial, Ray3D ray)
+{
+    Vec3D<double> color = Vec3D<double>(0, 0, 0);
+    ray.o = ray.o + (ray.d * scene.shadow_ray_epsilon);
+    IntersectionPoint nearestIntersection = intersectRay(ray, scene);
+
+    if (nearestIntersection.distance == numeric_limits<double>::max())
+    {
+        return color;
+    }
+
+    Material mat = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
+    color = shading(scene, camera, nearestIntersection, mat);
+
+    return color;
+}
+
+Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
+{
+    // COLOR BIMBIM BAMBAM
+    Vec3D<double> color = Vec3D<double>(0, 0, 0);
+    Vec3D<double> normal = findNormal(nearestIntersection, scene);
+
+    for(size_t i = 0; i < scene.point_lights.size(); i++)
+    {
+        // check shadow status !
+        // this is common between diffuse and specular
+
+        PointLight light = scene.point_lights[i];
+        Vec3D<double> temp = light.position - nearestIntersection.point;
+        double distance = magnitude(temp);
+        Ray3D shadowRay = generateRay(light.position, nearestIntersection.point);
+
+        // costlier than it should be
+        // it checks for minimum distance
+        // but there is no need for minimum distance check
+        // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
+
+        if(shadowIntersection(shadowRay, scene, distance))
+        {
+            // Shadow Logic ??
+            continue;
+        }
+
+        //diffuse
+
+        Vec3D<double> diffuse = nearestMaterial.diffuse;
+        Vec3D<double> intensity = light.intensity;
+        
+        double cos_theta = dotProduct(unitVector(temp), normal) < 0 ? 0 : dotProduct(unitVector(temp), normal);
+
+        color.x += diffuse.x * intensity.x * cos_theta / (distance * distance);
+        color.y += diffuse.y * intensity.y * cos_theta / (distance * distance);
+        color.z += diffuse.z * intensity.z * cos_theta / (distance * distance);
+
+        // specular logic
+
+        Vec3D<double> w_i = unitVector(light.position - nearestIntersection.point);
+        Vec3D<double> w_o = unitVector(camera.position - nearestIntersection.point);
+
+        Vec3D<double> h = (w_i + w_o) / magnitude(w_i + w_o);
+        double cos_alpha = dotProduct(normal, h) < 0 ? 0 : dotProduct(normal, h);
+
+        Vec3D<double> specular = nearestMaterial.specular;
+        double phong = nearestMaterial.phong_exponent;
+
+        color.x += specular.x * intensity.x * pow(cos_alpha, phong) / (distance * distance);
+        color.y += specular.y * intensity.y * pow(cos_alpha, phong) / (distance * distance);
+        color.z += specular.z * intensity.z * pow(cos_alpha, phong) / (distance * distance);
+    }
+    return color;
+}
+
+Vec3D<double> findNormal(const IntersectionPoint &nearestIntersection, const Scene &scene)
+{
+    Vec3D<double> normal;
+    if(nearestIntersection.isSphere)
+    {
+        normal = sphereNormal(nearestIntersection.point, scene.vertex_data[nearestIntersection.sphere->center_vertex_id - 1]);
+    }
+    else
+    {
+        normal = nearestIntersection.triangle->normal;
+    }
+    return normal;
+}
