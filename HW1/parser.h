@@ -10,8 +10,6 @@ namespace parser
 
     // Notice that all the structures are as simple as possible
     // so that you are not enforced to adopt any style or design.
-    
-
     struct Vec4D
     {
         double x, y, z, w;

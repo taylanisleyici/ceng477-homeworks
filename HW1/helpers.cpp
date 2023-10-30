@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "BVH.h"
 
 using namespace std;
 
@@ -29,11 +30,11 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
     {
         returnPoint = currentPoint;
         returnPoint.isSphere = false;
-    } 
+    }
     for (size_t i = 0; i < scene.meshes.size(); i++)
     {
         currentPoint = triangleArrayIntersectionHelper(ray, scene.meshes[i].faces, scene);
-        if (currentPoint.distance < returnPoint.distance) 
+        if (currentPoint.distance < returnPoint.distance)
         {
             returnPoint = currentPoint;
             returnPoint.isSphere = false;
@@ -42,37 +43,67 @@ IntersectionPoint intersectRay(const Ray3D &ray, const Scene &scene)
     return returnPoint;
 }
 
-bool shadowIntersection(const Ray3D &ray, const Scene &scene, double distance)
+bool shadowIntersection(BVHNode *root, const Ray3D &ray, const Scene &scene, double distance)
 {
+
+    // for(size_t i = 0; i < scene.spheres.size(); i++)
+    // {
+    //     IntersectionPoint currentPoint = raySphereIntersection(ray, scene.spheres[i], scene);
+    //     if(currentPoint.distance < distance)
+    //     {
+    //         return true;
+    //     }
+    // }
+    // IntersectionPoint currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
+    // if (currentPoint.distance < distance)
+    // {
+    //     return true;
+    // }
+
+    // for(size_t i = 0; i < scene.meshes.size(); i++)
+    // {
+    //     for(size_t j = 0; j < scene.meshes[i].faces.size(); j++)
+    //     {
+    //         IntersectionPoint currentPoint = rayTriangleIntersection(ray, scene.meshes[i].faces[j], scene);
+    //         if(currentPoint.distance < distance)
+    //         {
+    //             return true;
+    //         }
+    //     }
+    // }
+    // return false;
+
     distance -= scene.shadow_ray_epsilon;
 
-    for(size_t i = 0; i < scene.spheres.size(); i++)
+    if (root->isLeaf())
     {
-        IntersectionPoint currentPoint = raySphereIntersection(ray, scene.spheres[i], scene);
-        if(currentPoint.distance < distance)
-        {
-            return true;
-        }
+        return root->intersect(ray, scene).distance < distance;
     }
-    IntersectionPoint currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
-    if (currentPoint.distance < distance)
+    if (root == nullptr)
     {
-        return true;
+        return false;
     }
 
-    for(size_t i = 0; i < scene.meshes.size(); i++)
+    bool inTheBox = ray.o.x >= root->minVertex.x && ray.o.x <= root->maxVertex.x && ray.o.y >= root->minVertex.y && ray.o.y <= root->maxVertex.y && ray.o.z >= root->minVertex.z && ray.o.z <= root->maxVertex.z;
+    Vec3D<double> t1 = (root->minVertex - ray.o);
+    t1.x = t1.x / ray.d.x;
+    t1.y = t1.y / ray.d.y;
+    t1.z = t1.z / ray.d.z;
+    Vec3D<double> t2 = (root->maxVertex - ray.o);
+    t2.x = t2.x / ray.d.x;
+    t2.y = t2.y / ray.d.y;
+    t2.z = t2.z / ray.d.z;
+    Vec3D<double> minVec;
+    Vec3D<double> maxVec;
+    minVec = Vec3D<double>(min(t1.x, t2.x), min(t1.y, t2.y), min(t1.z, t2.z));
+    maxVec = Vec3D<double>(max(t1.x, t2.x), max(t1.y, t2.y), max(t1.z, t2.z));
+    double tMin = max(minVec.x, max(minVec.y, minVec.z));
+    double tMax = min(maxVec.x, min(maxVec.y, maxVec.z));
+    if ((tMin > tMax || tMin < EPSILON) && !inTheBox)
     {
-        for(size_t j = 0; j < scene.meshes[i].faces.size(); j++)
-        {
-            IntersectionPoint currentPoint = rayTriangleIntersection(ray, scene.meshes[i].faces[j], scene);
-            if(currentPoint.distance < distance)
-            {
-                return true;
-            }
-        }
+        return false;
     }
-    return false;
-
+    return shadowIntersection(root->node1, ray, scene, distance) || shadowIntersection(root->node2, ray, scene, distance);
 }
 
 IntersectionPoint triangleArrayIntersectionHelper(const Ray3D &ray, const std::vector<Triangle> &triangles, const Scene &scene)
@@ -97,11 +128,11 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
     // We should create a Ax = B equation
     // B is origin of ray - triangle's 3rd Vertex
     // A is triangle's 1st vertex - 3rd, 2nd - 3rd, - ray's d
-    Vec3D<double> a,b,c;
+    Vec3D<double> a, b, c;
     a = scene.vertex_data[triangle.indices.v0_id - 1];
     b = scene.vertex_data[triangle.indices.v1_id - 1];
     c = scene.vertex_data[triangle.indices.v2_id - 1];
-    vector<Vec3D<double>> A = {a-b, a-c, ray.d};
+    vector<Vec3D<double>> A = {a - b, a - c, ray.d};
     Vec3D<double> B = a - ray.o;
 
     Vec3D<double> alphaBetaT = cramer(A, B); // Alpha, Beta, T
@@ -112,7 +143,7 @@ IntersectionPoint rayTriangleIntersection(const Ray3D &ray, const Triangle &tria
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
     }
-    
+
     returnPoint.point = alphaBetaT.z * ray.d + ray.o;
     returnPoint.triangle = &triangle;
     returnPoint.distance = alphaBetaT.z;
@@ -144,7 +175,7 @@ IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, 
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
     }
-    if ((t1 + epsilon )< 0)
+    if ((t1 + epsilon) < 0)
     {
         returnPoint.distance = t2;
         returnPoint.point = ray.o + (t2 * ray.d);
@@ -180,7 +211,7 @@ IntersectionPoint raySphereIntersection(const Ray3D &ray, const Sphere &sphere, 
 
 double determinant(vector<Vec3D<double>> matrix)
 {
-    if (matrix.size()!=3)
+    if (matrix.size() != 3)
     {
         cout << "PAT" << endl;
         return 0;
@@ -193,9 +224,9 @@ double determinant(vector<Vec3D<double>> matrix)
     return col1 - col2 + col3;
 }
 
-Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b)//Ax = B
+Vec3D<double> cramer(const vector<Vec3D<double>> &a, const Vec3D<double> &b) // Ax = B
 {
-    
+
     Vec3D<double> result;
     double detOfA = determinant(a);
     if (detOfA == 0)
@@ -233,16 +264,16 @@ Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c)
     return normal;
 }
 
-
-Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, const Material &nearestMaterial, Ray3D ray, size_t depth)
+Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, size_t depth, BVHNode *root)
 {
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
-    if(depth <= 0)
+    if (depth <= 0)
     {
         return color;
     }
 
-    IntersectionPoint nearestIntersection = intersectRay(ray, scene);
+    IntersectionPoint nearestIntersection = root->intersect(ray, scene);
+    // IntersectionPoint nearestIntersection = root->intersect(ray, scene);
 
     if (nearestIntersection.distance == numeric_limits<double>::max())
     {
@@ -250,28 +281,28 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, const Mater
     }
 
     Material mat = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
-    
-    if(!mat.is_mirror)
+
+    if (!mat.is_mirror)
     {
-        return shading(scene, camera, nearestIntersection, mat);
+        return shading(scene, camera, nearestIntersection, mat, root);
     }
-    
+
     Vec3D<double> normal = findNormal(nearestIntersection, scene);
     Vec3D<double> w_o = -unitVector(ray.d);
     Vec3D<double> w_r = (-w_o) + (2 * normal * dotProduct(normal, w_o));
 
     Ray3D mirrorRay = Ray3D((nearestIntersection.point + (normal * scene.shadow_ray_epsilon)), w_r);
 
-    Vec3D<double> mirrorColor = mirrorObject(scene, camera, mat, mirrorRay, depth - 1);
+    Vec3D<double> mirrorColor = mirrorObject(scene, camera, mirrorRay, depth - 1, root);
 
     color.x += mirrorColor.x * mat.mirror.x;
     color.y += mirrorColor.y * mat.mirror.y;
     color.z += mirrorColor.z * mat.mirror.z;
 
-    return color + shading(scene, camera, nearestIntersection, mat);
+    return color + shading(scene, camera, nearestIntersection, mat, root);
 }
 
-Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
+Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial, BVHNode *root)
 {
     // COLOR BIMBIM BAMBAM
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
@@ -282,7 +313,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
     color.y += scene.ambient_light.y * nearestMaterial.ambient.y;
     color.z += scene.ambient_light.z * nearestMaterial.ambient.z;
 
-    for(size_t i = 0; i < scene.point_lights.size(); i++)
+    for (size_t i = 0; i < scene.point_lights.size(); i++)
     {
         // check shadow status !
         // this is common between diffuse and specular
@@ -294,18 +325,22 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
 
         // there is no need for minimum distance check
         // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
+        // if (shadowIntersection.distance < distance)
+        // {
+        //     continue;
+        // }
 
-        if(shadowIntersection(shadowRay, scene, distance))
+        if (shadowIntersection(root, shadowRay, scene, distance))
         {
             // Shadow Logic
             continue;
         }
 
-        //diffuse
+        // diffuse
 
         Vec3D<double> diffuse = nearestMaterial.diffuse;
         Vec3D<double> intensity = light.intensity;
-        
+
         double cos_theta = dotProduct(unitVector(temp), normal) < 0 ? 0 : dotProduct(unitVector(temp), normal);
 
         color.x += diffuse.x * intensity.x * cos_theta / (distance * distance);
@@ -333,7 +368,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
 Vec3D<double> findNormal(const IntersectionPoint &nearestIntersection, const Scene &scene)
 {
     Vec3D<double> normal;
-    if(nearestIntersection.isSphere)
+    if (nearestIntersection.isSphere)
     {
         normal = sphereNormal(nearestIntersection.point, scene.vertex_data[nearestIntersection.sphere->center_vertex_id - 1]);
     }
