@@ -21,8 +21,9 @@ public:
     virtual std::pair<Vec3D<double>, Vec3D<double>> getMinMax() const;
     virtual IntersectionPoint intersect(const Ray3D &ray, const parser::Scene &scene) const;
     Vec3D<double> minVertex, maxVertex;
-private:
     BVHNode *node1, *node2;
+private:
+    
 };
 
 class BVHLeaf: public BVHNode

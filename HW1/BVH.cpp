@@ -25,6 +25,8 @@ BVHNode::BVHNode()
 
 IntersectionPoint BVHNode::intersect(const Ray3D &ray, const Scene &scene) const
 {
+    // Check if origin is in the box
+    bool inTheBox = ray.o.x >= this->minVertex.x && ray.o.x <= this->maxVertex.x && ray.o.y >= this->minVertex.y && ray.o.y <= this->maxVertex.y && ray.o.z >= this->minVertex.z && ray.o.z <= this->maxVertex.z;
     Vec3D<double> t1 = (this->minVertex - ray.o);
     t1.x = t1.x / ray.d.x;
     t1.y = t1.y / ray.d.y;
@@ -39,9 +41,8 @@ IntersectionPoint BVHNode::intersect(const Ray3D &ray, const Scene &scene) const
     maxVec = Vec3D<double>(max(t1.x, t2.x), max(t1.y, t2.y), max(t1.z, t2.z));
     double tMin = max(minVec.x, max(minVec.y, minVec.z));
     double tMax = min(maxVec.x, min(maxVec.y, maxVec.z));
-
     IntersectionPoint returnPoint;
-    if (tMin > tMax || tMin < EPSILON)
+    if ((tMin > tMax || tMin < EPSILON) && !inTheBox)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
