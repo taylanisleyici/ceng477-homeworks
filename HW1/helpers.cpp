@@ -236,10 +236,16 @@ Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c)
 }
 
 
-Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, const Material &nearestMaterial, Ray3D ray)
+Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, size_t depth)
 {
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
+    if(depth <= 0)
+    {
+        return color;
+    }
+
     ray.o = ray.o + (ray.d * scene.shadow_ray_epsilon);
+
     IntersectionPoint nearestIntersection = intersectRay(ray, scene);
 
     if (nearestIntersection.distance == numeric_limits<double>::max())
@@ -248,9 +254,17 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, const Mater
     }
 
     Material mat = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
-    color = shading(scene, camera, nearestIntersection, mat);
+    if(!mat.is_mirror)
+    {
+        return shading(scene, camera, nearestIntersection, mat);
+    }
+    
+    Vec3D<double> normal = findNormal(nearestIntersection, scene);
+    Vec3D<double> w_o = -unitVector(ray.d);
+    Vec3D<double> w_r = (-w_o) + (2 * normal * dotProduct(normal, w_o));
+    Ray3D mirrorRay = Ray3D(nearestIntersection.point, w_r);
 
-    return color;
+    return shading(scene, camera, nearestIntersection, mat) + mirrorObject(scene, camera, mirrorRay, depth - 1);
 }
 
 Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
@@ -258,6 +272,11 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
     // COLOR BIMBIM BAMBAM
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
     Vec3D<double> normal = findNormal(nearestIntersection, scene);
+
+    // Ambient light
+    color.x += scene.ambient_light.x * nearestMaterial.ambient.x;
+    color.y += scene.ambient_light.y * nearestMaterial.ambient.y;
+    color.z += scene.ambient_light.z * nearestMaterial.ambient.z;
 
     for(size_t i = 0; i < scene.point_lights.size(); i++)
     {
@@ -269,14 +288,12 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         double distance = magnitude(temp);
         Ray3D shadowRay = generateRay(light.position, nearestIntersection.point);
 
-        // costlier than it should be
-        // it checks for minimum distance
-        // but there is no need for minimum distance check
+        // there is no need for minimum distance check
         // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
 
         if(shadowIntersection(shadowRay, scene, distance))
         {
-            // Shadow Logic ??
+            // Shadow Logic
             continue;
         }
 
