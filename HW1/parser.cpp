@@ -2,16 +2,17 @@
 #include "tinyxml2.h"
 #include <sstream>
 #include <stdexcept>
+#include "BVH.h"
 
 void parser::Scene::calculateNormal(parser::Triangle &triangle)
 {
-    Vec3D<double> a,b,c;
+    Vec3D<double> a, b, c;
     a = vertex_data[triangle.indices.v0_id - 1];
     b = vertex_data[triangle.indices.v1_id - 1];
     c = vertex_data[triangle.indices.v2_id - 1];
     auto u = b - a;
     auto v = c - a;
-    triangle.normal = unitVector(crossProduct(u,v));
+    triangle.normal = unitVector(crossProduct(u, v));
 }
 
 void parser::Scene::loadFromXml(const std::string &filepath)
@@ -31,7 +32,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         throw std::runtime_error("Error: Root is not found.");
     }
 
-    //Get BackgroundColor
+    // Get BackgroundColor
     auto element = root->FirstChildElement("BackgroundColor");
     if (element)
     {
@@ -43,7 +44,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     stream >> background_color.x >> background_color.y >> background_color.z;
 
-    //Get ShadowRayEpsilon
+    // Get ShadowRayEpsilon
     element = root->FirstChildElement("ShadowRayEpsilon");
     if (element)
     {
@@ -55,7 +56,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     stream >> shadow_ray_epsilon;
 
-    //Get MaxRecursionDepth
+    // Get MaxRecursionDepth
     element = root->FirstChildElement("MaxRecursionDepth");
     if (element)
     {
@@ -67,7 +68,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     stream >> max_recursion_depth;
 
-    //Get Cameras
+    // Get Cameras
     element = root->FirstChildElement("Cameras");
     element = element->FirstChildElement("Camera");
     Camera camera;
@@ -100,7 +101,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         element = element->NextSiblingElement("Camera");
     }
 
-    //Get Lights
+    // Get Lights
     element = root->FirstChildElement("Lights");
     auto child = element->FirstChildElement("AmbientLight");
     stream << child->GetText() << std::endl;
@@ -121,7 +122,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         element = element->NextSiblingElement("PointLight");
     }
 
-    //Get Materials
+    // Get Materials
     element = root->FirstChildElement("Materials");
     element = element->FirstChildElement("Material");
     Material material;
@@ -150,7 +151,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         element = element->NextSiblingElement("Material");
     }
 
-    //Get VertexData
+    // Get VertexData
     element = root->FirstChildElement("VertexData");
     stream << element->GetText() << std::endl;
     Vec3D<double> vertex;
@@ -161,7 +162,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     stream.clear();
 
-    //Get Meshes
+    // Get Meshes
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Mesh");
     Mesh mesh;
@@ -182,6 +183,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
             faceTriangle.indices = face;
             calculateNormal(faceTriangle);
             mesh.faces.push_back(faceTriangle);
+            leafs.push_back(new BVHLeaf(mesh.faces[mesh.faces.size() - 1], *this));
         }
         stream.clear();
 
@@ -191,7 +193,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     stream.clear();
 
-    //Get Triangles
+    // Get Triangles
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Triangle");
     Triangle triangle;
@@ -206,10 +208,11 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         stream >> triangle.indices.v0_id >> triangle.indices.v1_id >> triangle.indices.v2_id;
 
         triangles.push_back(triangle);
+        leafs.push_back(new BVHLeaf(triangles[triangles.size() - 1], *this));
         element = element->NextSiblingElement("Triangle");
     }
 
-    //Get Spheres
+    // Get Spheres
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Sphere");
     Sphere sphere;
@@ -228,6 +231,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         stream >> sphere.radius;
 
         spheres.push_back(sphere);
+        leafs.push_back(new BVHLeaf(spheres[spheres.size() - 1], *this));
         element = element->NextSiblingElement("Sphere");
     }
 }

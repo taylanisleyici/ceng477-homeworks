@@ -5,10 +5,43 @@
 #include "Vec3D.h"
 #include "Ray3D.h"
 #include "helpers.h"
+#include "BVH.h"
 
 using namespace std;
 using namespace parser;
 
+// Swap two BVHLeaf pointers
+void swap(BVHLeaf*& a, BVHLeaf*& b) {
+    BVHLeaf* temp = a;
+    a = b;
+    b = temp;
+}
+
+// Partition the vector based on maxVertex.y
+int partition(std::vector<BVHLeaf*>& arr, int low, int high) {
+    float pivot = arr[high]->maxVertex.y;
+    int i = (low - 1);
+
+    for (int j = low; j <= high - 1; j++) {
+        if (arr[j]->maxVertex.y < pivot) {
+            i++;
+            swap(arr[i], arr[j]);
+        }
+    }
+
+    swap(arr[i + 1], arr[high]);
+    return (i + 1);
+}
+
+// Quicksort function
+void quicksort(std::vector<BVHLeaf*>& arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+
+        quicksort(arr, low, pi - 1);
+        quicksort(arr, pi + 1, high);
+    }
+}
 
 Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
 {
@@ -17,7 +50,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
     color.x = 0;
     color.y = 0;
     color.z = 0;
-    for(size_t i = 0; i < scene.point_lights.size(); i++)
+    for (size_t i = 0; i < scene.point_lights.size(); i++)
     {
         // check shadow status !
         // this is common between diffuse and specular
@@ -28,20 +61,20 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         Ray3D shadowRay = generateRay(light.position, nearestIntersection.point);
 
         IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
-        if(shadowIntersection.distance < distance)
+        if (shadowIntersection.distance < distance)
         {
             // Shadow Logic ??
             continue;
         }
 
-        //diffuse
+        // diffuse
 
         Vec3D<double> diffuse = nearestMaterial.diffuse;
         Vec3D<double> intensity = light.intensity;
-        
+
         Vec3D<double> normal;
 
-        if(nearestIntersection.isSphere)
+        if (nearestIntersection.isSphere)
         {
             normal = sphereNormal(nearestIntersection.point, scene.vertex_data[nearestIntersection.sphere->center_vertex_id - 1]);
         }
@@ -49,7 +82,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         {
             normal = nearestIntersection.triangle->normal;
         }
-        
+
         double cos_theta = dotProduct(unitVector(temp), normal) < 0 ? 0 : dotProduct(unitVector(temp), normal);
 
         color.x += diffuse.x * intensity.x * cos_theta / (distance * distance);
@@ -74,24 +107,21 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
     return color;
 }
 
-Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, const Camera &camera)
+Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, const Camera &camera, BVHNode *root)
 {
-    IntersectionPoint nearestIntersection = intersectRay(ray, scene);
+    IntersectionPoint nearestIntersection = root->intersect(ray, scene);
+    // IntersectionPoint nearestIntersection = intersectRay(ray, scene);
     if (nearestIntersection.distance == numeric_limits<double>::max())
     {
-
-        //TODO
-        //Type a long to unsigned char caster
-        // return scene.background_color;
-        return Vec3D<unsigned char>(0,0,0);
+        return Vec3D<unsigned char>((unsigned char) scene.background_color.x, (unsigned char) scene.background_color.y, (unsigned char) scene.background_color.z);
     }
-    //TODO
-    //TEST
+    // TODO
+    // TEST
     Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
-    double R,G,B;
-        
+    double R, G, B;
+
     Vec3D<double> colorDouble = shading(scene, camera, nearestIntersection, nearestMaterial);
-    
+
     R = ((scene.ambient_light.x * nearestMaterial.ambient.x + colorDouble.x)) + 0.5;
     G = ((scene.ambient_light.y * nearestMaterial.ambient.y + colorDouble.y)) + 0.5;
     B = ((scene.ambient_light.z * nearestMaterial.ambient.z + colorDouble.z)) + 0.5;
@@ -109,10 +139,10 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
         B = 255;
     }
 
-    return Vec3D<unsigned char>(R,G,B);
+    return Vec3D<unsigned char>(R, G, B);
 }
 
-void renderImageFromCamera(const Camera &camera, const Scene &scene)
+void renderImageFromCamera(const Camera &camera, const Scene &scene, BVHNode *root)
 {
     Vec3D<double> v = camera.up;
     Vec3D<double> w = -camera.gaze;
@@ -128,7 +158,7 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene)
         for (size_t k = 0; k < width; k++)
         {
             Ray3D ray = computeRay(camera.position, k, j, camera.near_distance, u, v, w, camera.near_plane, width, height);
-            auto pixelValues = calculatePixelOfRay(ray, scene, camera);
+            auto pixelValues = calculatePixelOfRay(ray, scene, camera, root);
             image[i++] = pixelValues.x;
             image[i++] = pixelValues.y;
             image[i++] = pixelValues.z;
@@ -141,13 +171,22 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("./inputs/simple_shading.xml");
+    scene.loadFromXml("./inputs/simple.xml");
 
     int light_count = scene.point_lights.size();
 
+    // cout << scene.triangles.size() << endl;
+    // cout << scene.spheres.size() << endl;
+
+    cout << leafs.size() << endl;
+    quicksort(leafs, 0, leafs.size() - 1);
+
+
+    BVHNode *root = buildTree(leafs, 0, leafs.size() - 1);
+
     for (int i = 0; i < scene.cameras.size(); i++)
     {
-        renderImageFromCamera(scene.cameras[i], scene);
+        renderImageFromCamera(scene.cameras[i], scene, root);
     }
 
     return 0;
