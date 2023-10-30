@@ -247,8 +247,8 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
 
     ray.o = ray.o + (ray.d * scene.shadow_ray_epsilon);
 
-    // IntersectionPoint nearestIntersection = intersectRay(ray, scene);
-    IntersectionPoint nearestIntersection = root->intersect(ray, scene);
+    IntersectionPoint nearestIntersection =root->intersect(ray, scene);
+    // IntersectionPoint nearestIntersection = root->intersect(ray, scene);
 
     if (nearestIntersection.distance == numeric_limits<double>::max())
     {
@@ -293,11 +293,11 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         // there is no need for minimum distance check
         // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
 
-        // if(shadowIntersection(shadowRay, scene, distance))
-        // {
-        //     // Shadow Logic
-        //     continue;
-        // }
+        if(shadowIntersection(shadowRay, scene, distance))
+        {
+            // Shadow Logic
+            continue;
+        }
 
         //diffuse
 

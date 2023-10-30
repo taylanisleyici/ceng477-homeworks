@@ -81,7 +81,7 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
     }
     // TODO
     // TEST
-    Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
+    Material nearestMaterial = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1]; // Change it with if
     double R = 0,G = 0,B = 0;
 
     // mirror logic
@@ -136,7 +136,7 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene, BVHNode *ro
     {
         for (size_t k = 0; k < width; k++)
         {
-            if (k == 400 && j == 400)
+            if (k == 575 && j == 235)
             {
                 cout << "PAT" << endl;
             } 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml(argv[1]);
+    scene.loadFromXml("./inputs/simple.xml");
 
     int light_count = scene.point_lights.size();
 
