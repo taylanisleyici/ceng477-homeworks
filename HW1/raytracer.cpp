@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("inputs/simple.xml");
+    scene.loadFromXml("inputs/mirror_spheres.xml");
 
     int light_count = scene.point_lights.size();
 
