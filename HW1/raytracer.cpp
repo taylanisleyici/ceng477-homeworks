@@ -31,13 +31,14 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
     {
         Vec3D<double> normal = findNormal(nearestIntersection, scene);
         Vec3D<double> w_o = unitVector(camera.position - nearestIntersection.point);
-        Vec3D<double> w_r = -(w_o) + (2 * normal * dotProduct(normal, w_o));
-        Ray3D mirrorRay = Ray3D(nearestIntersection.point, w_r);
+        Vec3D<double> w_r = (-w_o) + (2 * normal * dotProduct(w_o, normal));
 
-        Vec3D<double> mirrorColor = mirrorObject(scene, camera, mirrorRay, scene.max_recursion_depth);
-        R += mirrorColor.x * nearestMaterial.mirror.x;
-        G += mirrorColor.y * nearestMaterial.mirror.y;
-        B += mirrorColor.z * nearestMaterial.mirror.z;
+        Ray3D mirrorRay = Ray3D((nearestIntersection.point + (normal * scene.shadow_ray_epsilon)), w_r);
+
+        Vec3D<double> mirrorColor = mirrorObject(scene, camera,nearestMaterial, mirrorRay, scene.max_recursion_depth);
+        R += mirrorColor.x;
+        G += mirrorColor.y;
+        B += mirrorColor.z;
     }
 
     Vec3D<double> colorDouble = shading(scene, camera, nearestIntersection, nearestMaterial);
