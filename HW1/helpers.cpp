@@ -55,14 +55,12 @@ bool shadowIntersection(const Ray3D &ray, const Scene &scene, double distance)
             return true;
         }
     }
-    for(size_t i = 0; i < scene.triangles.size(); i++)
+    IntersectionPoint currentPoint = triangleArrayIntersectionHelper(ray, scene.triangles, scene);
+    if (currentPoint.distance < distance)
     {
-        IntersectionPoint currentPoint = rayTriangleIntersection(ray, scene.triangles[i], scene);
-        if(currentPoint.distance < distance)
-        {
-            return true;
-        }
+        return true;
     }
+
     for(size_t i = 0; i < scene.meshes.size(); i++)
     {
         for(size_t j = 0; j < scene.meshes[i].faces.size(); j++)
@@ -245,8 +243,6 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
         return color;
     }
 
-    ray.o = ray.o + (ray.d * scene.shadow_ray_epsilon);
-
     IntersectionPoint nearestIntersection =root->intersect(ray, scene);
     // IntersectionPoint nearestIntersection = root->intersect(ray, scene);
 
@@ -256,6 +252,7 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
     }
 
     Material mat = nearestIntersection.isSphere ? scene.materials[nearestIntersection.sphere->material_id - 1] : scene.materials[nearestIntersection.triangle->material_id - 1];
+    
     if(!mat.is_mirror)
     {
         return shading(scene, camera, nearestIntersection, mat);
@@ -264,9 +261,16 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
     Vec3D<double> normal = findNormal(nearestIntersection, scene);
     Vec3D<double> w_o = -unitVector(ray.d);
     Vec3D<double> w_r = (-w_o) + (2 * normal * dotProduct(normal, w_o));
-    Ray3D mirrorRay = Ray3D(nearestIntersection.point, w_r);
 
-    return shading(scene, camera, nearestIntersection, mat) + mirrorObject(scene, camera, mirrorRay, depth - 1, root);
+    Ray3D mirrorRay = Ray3D((nearestIntersection.point + (normal * scene.shadow_ray_epsilon)), w_r);
+
+    Vec3D<double> mirrorColor = mirrorObject(scene, camera, mat, mirrorRay, depth - 1, root);
+
+    color.x += mirrorColor.x * mat.mirror.x;
+    color.y += mirrorColor.y * mat.mirror.y;
+    color.z += mirrorColor.z * mat.mirror.z;
+
+    return color + shading(scene, camera, nearestIntersection, mat);
 }
 
 Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
