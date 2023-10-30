@@ -18,6 +18,36 @@ void swap(BVHLeaf*& a, BVHLeaf*& b) {
 }
 
 // Partition the vector based on maxVertex.y
+// int partition(std::vector<BVHLeaf*>& arr, int low, int high) {
+//     float pivot = arr[high]->maxVertex.y;
+//     int i = (low - 1);
+
+//     for (int j = low; j <= high - 1; j++) {
+//         if (arr[j]->maxVertex.y < pivot) {
+//             i++;
+//             // swap(arr[i], arr[j]);
+//             BVHLeaf *temp = arr[i];
+//             arr[i] = arr[j];
+//             arr[j] = temp;
+//         }
+//     }
+
+//     BVHLeaf *temp = arr[i+1];
+//     arr[i+1] = arr[high];
+//     arr[high] = temp;
+//     return (i + 1);
+// }
+
+// // Quicksort function
+// void quicksort(std::vector<BVHLeaf*>& arr, int low, int high) {
+//     if (low < high) {
+//         int pi = partition(arr, low, high);
+
+//         quicksort(arr, low, pi - 1);
+//         quicksort(arr, pi + 1, high);
+//     }
+// }
+
 int partition(std::vector<BVHLeaf*>& arr, int low, int high) {
     float pivot = arr[high]->maxVertex.y;
     int i = (low - 1);
@@ -25,19 +55,16 @@ int partition(std::vector<BVHLeaf*>& arr, int low, int high) {
     for (int j = low; j <= high - 1; j++) {
         if (arr[j]->maxVertex.y < pivot) {
             i++;
-            swap(arr[i], arr[j]);
+            std::swap(arr[i], arr[j]);
         }
     }
-
-    swap(arr[i + 1], arr[high]);
+    std::swap(arr[i + 1], arr[high]);
     return (i + 1);
 }
 
-// Quicksort function
 void quicksort(std::vector<BVHLeaf*>& arr, int low, int high) {
     if (low < high) {
         int pi = partition(arr, low, high);
-
         quicksort(arr, low, pi - 1);
         quicksort(arr, pi + 1, high);
     }
@@ -157,6 +184,10 @@ void renderImageFromCamera(const Camera &camera, const Scene &scene, BVHNode *ro
     {
         for (size_t k = 0; k < width; k++)
         {
+            if (k == 400 && j == 400)
+            {
+                cout << "PAT" << endl;
+            } 
             Ray3D ray = computeRay(camera.position, k, j, camera.near_distance, u, v, w, camera.near_plane, width, height);
             auto pixelValues = calculatePixelOfRay(ray, scene, camera, root);
             image[i++] = pixelValues.x;

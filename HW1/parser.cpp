@@ -183,11 +183,14 @@ void parser::Scene::loadFromXml(const std::string &filepath)
             faceTriangle.indices = face;
             calculateNormal(faceTriangle);
             mesh.faces.push_back(faceTriangle);
-            leafs.push_back(new BVHLeaf(mesh.faces[mesh.faces.size() - 1], *this));
         }
         stream.clear();
 
         meshes.push_back(mesh);
+        for (size_t i = 0; i < meshes[meshes.size() - 1].faces.size(); i++)
+        {
+            leafs.push_back(new BVHLeaf(meshes[meshes.size() - 1].faces[i], *this));
+        }
         mesh.faces.clear();
         element = element->NextSiblingElement("Mesh");
     }

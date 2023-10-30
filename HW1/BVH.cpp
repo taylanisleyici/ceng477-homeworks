@@ -41,7 +41,7 @@ IntersectionPoint BVHNode::intersect(const Ray3D &ray, const Scene &scene) const
     double tMax = min(maxVec.x, min(maxVec.y, maxVec.z));
 
     IntersectionPoint returnPoint;
-    if (tMin + EPSILON > tMax || tMin < EPSILON)
+    if (tMin > tMax || tMin < EPSILON)
     {
         returnPoint.distance = numeric_limits<double>::max();
         return returnPoint;
