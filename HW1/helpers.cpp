@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "BVH.h"
 
 using namespace std;
 
@@ -236,7 +237,7 @@ Vec3D<double> sphereNormal(Vec3D<double> p, Vec3D<double> c)
 }
 
 
-Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, size_t depth)
+Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, size_t depth, BVHNode *root)
 {
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
     if(depth <= 0)
@@ -246,7 +247,8 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
 
     ray.o = ray.o + (ray.d * scene.shadow_ray_epsilon);
 
-    IntersectionPoint nearestIntersection = intersectRay(ray, scene);
+    // IntersectionPoint nearestIntersection = intersectRay(ray, scene);
+    IntersectionPoint nearestIntersection = root->intersect(ray, scene);
 
     if (nearestIntersection.distance == numeric_limits<double>::max())
     {
@@ -264,7 +266,7 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
     Vec3D<double> w_r = (-w_o) + (2 * normal * dotProduct(normal, w_o));
     Ray3D mirrorRay = Ray3D(nearestIntersection.point, w_r);
 
-    return shading(scene, camera, nearestIntersection, mat) + mirrorObject(scene, camera, mirrorRay, depth - 1);
+    return shading(scene, camera, nearestIntersection, mat) + mirrorObject(scene, camera, mirrorRay, depth - 1, root);
 }
 
 Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial)
@@ -291,11 +293,11 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         // there is no need for minimum distance check
         // IntersectionPoint shadowIntersection = intersectRay(shadowRay, scene);
 
-        if(shadowIntersection(shadowRay, scene, distance))
-        {
-            // Shadow Logic
-            continue;
-        }
+        // if(shadowIntersection(shadowRay, scene, distance))
+        // {
+        //     // Shadow Logic
+        //     continue;
+        // }
 
         //diffuse
 

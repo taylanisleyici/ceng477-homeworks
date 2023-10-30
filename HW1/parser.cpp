@@ -211,8 +211,12 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         stream >> triangle.indices.v0_id >> triangle.indices.v1_id >> triangle.indices.v2_id;
 
         triangles.push_back(triangle);
-        leafs.push_back(new BVHLeaf(triangles[triangles.size() - 1], *this));
         element = element->NextSiblingElement("Triangle");
+    }
+
+    for (size_t i= 0; i < triangles.size(); i++)
+    {
+        leafs.push_back(new BVHLeaf(triangles[i], *this));
     }
 
     // Get Spheres
@@ -234,7 +238,10 @@ void parser::Scene::loadFromXml(const std::string &filepath)
         stream >> sphere.radius;
 
         spheres.push_back(sphere);
-        leafs.push_back(new BVHLeaf(spheres[spheres.size() - 1], *this));
         element = element->NextSiblingElement("Sphere");
+    }
+    for (size_t i = 0; i < spheres.size(); i++)
+    {
+        leafs.push_back(new BVHLeaf(spheres[i], *this));
     }
 }

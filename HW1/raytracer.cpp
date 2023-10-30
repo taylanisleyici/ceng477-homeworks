@@ -49,11 +49,11 @@ void swap(BVHLeaf*& a, BVHLeaf*& b) {
 // }
 
 int partition(std::vector<BVHLeaf*>& arr, int low, int high) {
-    float pivot = arr[high]->maxVertex.y;
+    float pivot = arr[high]->maxVertex.x;
     int i = (low - 1);
 
     for (int j = low; j <= high - 1; j++) {
-        if (arr[j]->maxVertex.y < pivot) {
+        if (arr[j]->maxVertex.x < pivot) {
             i++;
             std::swap(arr[i], arr[j]);
         }
@@ -92,7 +92,7 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
         Vec3D<double> w_r = -(w_o) + (2 * normal * dotProduct(normal, w_o));
         Ray3D mirrorRay = Ray3D(nearestIntersection.point, w_r);
 
-        Vec3D<double> mirrorColor = mirrorObject(scene, camera, mirrorRay, scene.max_recursion_depth);
+        Vec3D<double> mirrorColor = mirrorObject(scene, camera, mirrorRay, scene.max_recursion_depth, root);
         R += mirrorColor.x * nearestMaterial.mirror.x;
         G += mirrorColor.y * nearestMaterial.mirror.y;
         B += mirrorColor.z * nearestMaterial.mirror.z;
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    scene.loadFromXml("inputs/mirror_spheres.xml");
+    scene.loadFromXml(argv[1]);
 
     int light_count = scene.point_lights.size();
 
