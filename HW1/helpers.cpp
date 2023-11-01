@@ -284,7 +284,7 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
 
     if (!mat.is_mirror)
     {
-        return shading(scene, camera, nearestIntersection, mat, root);
+        return shading(scene, ray.o, nearestIntersection, mat, root);
     }
 
     Vec3D<double> normal = findNormal(nearestIntersection, scene);
@@ -299,10 +299,10 @@ Vec3D<double> mirrorObject(const Scene &scene, const Camera &camera, Ray3D ray, 
     color.y += mirrorColor.y * mat.mirror.y;
     color.z += mirrorColor.z * mat.mirror.z;
 
-    return color + shading(scene, camera, nearestIntersection, mat, root);
+    return color + shading(scene, ray.o, nearestIntersection, mat, root);
 }
 
-Vec3D<double> shading(const Scene &scene, const Camera &camera, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial, BVHNode *root)
+Vec3D<double> shading(const Scene &scene, const Vec3D<double> cameraPosition, const IntersectionPoint &nearestIntersection, const Material &nearestMaterial, BVHNode *root)
 {
     // COLOR BIMBIM BAMBAM
     Vec3D<double> color = Vec3D<double>(0, 0, 0);
@@ -350,7 +350,7 @@ Vec3D<double> shading(const Scene &scene, const Camera &camera, const Intersecti
         // specular logic
 
         Vec3D<double> w_i = unitVector(light.position - nearestIntersection.point);
-        Vec3D<double> w_o = unitVector(camera.position - nearestIntersection.point);
+        Vec3D<double> w_o = unitVector(cameraPosition - nearestIntersection.point);
 
         Vec3D<double> h = (w_i + w_o) / magnitude(w_i + w_o);
         double cos_alpha = dotProduct(normal, h) < 0 ? 0 : dotProduct(normal, h);

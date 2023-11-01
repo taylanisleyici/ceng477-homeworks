@@ -99,7 +99,7 @@ Vec3D<unsigned char> calculatePixelOfRay(const Ray3D &ray, const Scene &scene, c
         B += mirrorColor.z * nearestMaterial.mirror.z;
     }
 
-    Vec3D<double> colorDouble = shading(scene, camera, nearestIntersection, nearestMaterial, root);
+    Vec3D<double> colorDouble = shading(scene, camera.position, nearestIntersection, nearestMaterial, root);
     
     R += colorDouble.x + 0.5;
     G += colorDouble.y + 0.5;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 {
     parser::Scene scene;
 
-    // scene.loadFromXml("./inputs/bunny.xml");
+    // scene.loadFromXml("./inputs/mirror_spheres.xml");
     scene.loadFromXml(argv[1]);
 
     int light_count = scene.point_lights.size();
