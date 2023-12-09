@@ -1,7 +1,10 @@
 #ifndef __TRANSLATION_H__
 #define __TRANSLATION_H__
 
-class Translation
+#include "Matrix4.h"
+#include "Transformation.h"
+
+class Translation : Transformation
 {
 public:
     int translationId;

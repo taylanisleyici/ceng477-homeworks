@@ -1,0 +1,3 @@
+/home/taylan/repos/ceng477-homeworks/HW2/build/CMakeFiles/HW2.dir
+/home/taylan/repos/ceng477-homeworks/HW2/build/CMakeFiles/edit_cache.dir
+/home/taylan/repos/ceng477-homeworks/HW2/build/CMakeFiles/rebuild_cache.dir

@@ -32,7 +32,7 @@ public:
 	int makeBetweenZeroAnd255(double value);
 	void writeImageToPPMFile(Camera *camera);
 	void convertPPMToPNG(std::string ppmFileName);
-	void forwardRenderingPipeline(Camera *camera);
+    void forwardRenderingPipeline(Camera *camera, bool isWireFrame, bool cullingEnabled);
 };
 
 #endif

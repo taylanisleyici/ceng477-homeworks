@@ -1,7 +1,10 @@
 #ifndef __SCALING_H__
 #define __SCALING_H__
 
-class Scaling
+#include "Transformation.h"
+#include "Matrix4.h"
+
+class Scaling : public Transformation
 {
 public:
     int scalingId;

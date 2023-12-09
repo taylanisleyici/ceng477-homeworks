@@ -35,6 +35,36 @@ Matrix4::Matrix4(const Matrix4 &other)
     }
 }
 
+Matrix4 Matrix4::operator*(const Matrix4 &other)
+{
+    /*
+     * If we will use this function too often, we should consider replacing it
+     * with a more memory efficient version.
+     */
+    Matrix4 result;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int k = 0; k < 4; k++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                result.values[i][k] += this->values[i][j] * other.values[j][k];
+            }
+        }
+    }
+    return result;
+}
+
+void Matrix4::multiplyWith(const Matrix4 &other)
+{
+    *this = *this * other;
+}
+
+double *Matrix4::operator[](int index)
+{
+    return values[index];
+}
+
 std::ostream &operator<<(std::ostream &os, const Matrix4 &m)
 {
 
@@ -47,4 +77,17 @@ std::ostream &operator<<(std::ostream &os, const Matrix4 &m)
        << "|" << m.values[3][0] << "|" << m.values[3][1] << "|" << m.values[3][2] << "|" << m.values[3][3] << "|";
 
     return os;
+}
+
+Matrix4 Matrix4::transpose()
+{
+    Matrix4 ret;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            ret[i][j] = (*this)[i][j];
+        }
+    }
+    return ret;
 }

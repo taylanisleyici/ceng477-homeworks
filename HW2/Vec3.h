@@ -2,6 +2,8 @@
 #define __VEC3_H__
 #define NO_COLOR -1
 
+#include <iostream>
+
 class Vec3
 {
 public:
@@ -14,6 +16,10 @@ public:
     Vec3(const Vec3 &other);
 
     double getNthComponent(int n);
+    double magnitude();
+
+    Vec3 operator*(const Vec3 &other);
+    Vec3 unit();
 
     friend std::ostream &operator<<(std::ostream &os, const Vec3 &v);
 };
