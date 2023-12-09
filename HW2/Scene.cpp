@@ -174,7 +174,7 @@ Scene::Scene(const char *xmlPath)
 
 		rotationElement->QueryIntAttribute("id", &rotation->rotationId);
 		str = rotationElement->Attribute("value");
-		sscanf(str, "%lf %lf %lf %lf", &rotation->angle, &rotation->ux, &rotation->uy, &rotation->uz);
+		sscanf(str, "%lf %lf %lf %lf", &rotation->angle, &rotation->u.x, &rotation->u.y, &rotation->u.z);
 
 		this->rotations.push_back(rotation);
 
@@ -238,7 +238,8 @@ Scene::Scene(const char *xmlPath)
 
 			if (result != EOF)
 			{
-				mesh->triangles.push_back(Triangle(v1, v2, v3));
+				
+				mesh->triangles.push_back(Triangle(v1, v2, v3, this->calculateNormalOfTriangle(v1, v2, v3)));
 			}
 			row = strtok(NULL, "\n");
 		}
@@ -342,7 +343,7 @@ void Scene::convertPPMToPNG(string ppmFileName)
 	string command;
 
 	// TODO: Change implementation if necessary.
-	command = "./magick convert " + ppmFileName + " " + ppmFileName + ".png";
+	command = "magick convert " + ppmFileName + " " + ppmFileName + ".png";
 	system(command.c_str());
 }
 
@@ -352,4 +353,9 @@ void Scene::convertPPMToPNG(string ppmFileName)
 void Scene::forwardRenderingPipeline(Camera *camera, bool isWireFrame, bool cullingEnabled)
 {
 	// TODO: Implement this function
+}
+
+Vec3 Scene::calculateNormalOfTriangle(int v1, int v2, int v3)
+{
+	return (*this->vertices[v2-1] - *this->vertices[v1 - 1]) * (*this->vertices[v3 - 1] - *this->vertices[v1 - 1]);
 }

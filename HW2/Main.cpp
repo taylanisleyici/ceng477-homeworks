@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
             scene->initializeImage(scene->cameras[i]);
 
             // do forward rendering pipeline operations
-            scene->forwardRenderingPipeline(scene->cameras[i]);
+            scene->forwardRenderingPipeline(scene->cameras[i], false, false); // TODO
 
             // generate PPM file
             scene->writeImageToPPMFile(scene->cameras[i]);

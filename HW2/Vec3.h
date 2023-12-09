@@ -18,7 +18,10 @@ public:
     double getNthComponent(int n);
     double magnitude();
 
-    Vec3 operator*(const Vec3 &other);
+    Vec3 cross(const Vec3 &other);
+    Vec3 operator+(const Vec3 &other);
+    Vec3 operator-(const Vec3 &other);
+    Vec3 Vec3::operator*(const Vec3 &other);
     Vec3 unit();
 
     friend std::ostream &operator<<(std::ostream &os, const Vec3 &v);

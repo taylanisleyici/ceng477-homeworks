@@ -9,6 +9,8 @@
 #include "Camera.h"
 #include "Mesh.h"
 
+#include "Vec3.h"
+
 class Scene
 {
 public:
@@ -33,6 +35,7 @@ public:
 	void writeImageToPPMFile(Camera *camera);
 	void convertPPMToPNG(std::string ppmFileName);
     void forwardRenderingPipeline(Camera *camera, bool isWireFrame, bool cullingEnabled);
+	Vec3 calculateNormalOfTriangle(int v1, int v2, int v3);
 };
 
 #endif
