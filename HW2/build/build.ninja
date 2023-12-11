@@ -133,6 +133,12 @@ build CMakeFiles/HW2.dir/Transformation.cpp.o: CXX_COMPILER__HW2_unscanned_Debug
   OBJECT_DIR = CMakeFiles/HW2.dir
   OBJECT_FILE_DIR = CMakeFiles/HW2.dir
 
+build CMakeFiles/HW2.dir/Triangle.cpp.o: CXX_COMPILER__HW2_unscanned_Debug /home/taylan/repos/ceng477-homeworks/HW2/Triangle.cpp || cmake_object_order_depends_target_HW2
+  DEP_FILE = CMakeFiles/HW2.dir/Triangle.cpp.o.d
+  FLAGS = -g -std=gnu++11
+  OBJECT_DIR = CMakeFiles/HW2.dir
+  OBJECT_FILE_DIR = CMakeFiles/HW2.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target HW2
@@ -141,7 +147,7 @@ build CMakeFiles/HW2.dir/Transformation.cpp.o: CXX_COMPILER__HW2_unscanned_Debug
 #############################################
 # Link the executable HW2
 
-build HW2: CXX_EXECUTABLE_LINKER__HW2_Debug CMakeFiles/HW2.dir/Camera.cpp.o CMakeFiles/HW2.dir/Color.cpp.o CMakeFiles/HW2.dir/Helpers.cpp.o CMakeFiles/HW2.dir/Main.cpp.o CMakeFiles/HW2.dir/Matrix4.cpp.o CMakeFiles/HW2.dir/Mesh.cpp.o CMakeFiles/HW2.dir/Rotation.cpp.o CMakeFiles/HW2.dir/Scene.cpp.o CMakeFiles/HW2.dir/Scaling.cpp.o CMakeFiles/HW2.dir/tinyxml2.cpp.o CMakeFiles/HW2.dir/Translation.cpp.o CMakeFiles/HW2.dir/Vec3.cpp.o CMakeFiles/HW2.dir/Vec4.cpp.o CMakeFiles/HW2.dir/Transformation.cpp.o
+build HW2: CXX_EXECUTABLE_LINKER__HW2_Debug CMakeFiles/HW2.dir/Camera.cpp.o CMakeFiles/HW2.dir/Color.cpp.o CMakeFiles/HW2.dir/Helpers.cpp.o CMakeFiles/HW2.dir/Main.cpp.o CMakeFiles/HW2.dir/Matrix4.cpp.o CMakeFiles/HW2.dir/Mesh.cpp.o CMakeFiles/HW2.dir/Rotation.cpp.o CMakeFiles/HW2.dir/Scene.cpp.o CMakeFiles/HW2.dir/Scaling.cpp.o CMakeFiles/HW2.dir/tinyxml2.cpp.o CMakeFiles/HW2.dir/Translation.cpp.o CMakeFiles/HW2.dir/Vec3.cpp.o CMakeFiles/HW2.dir/Vec4.cpp.o CMakeFiles/HW2.dir/Transformation.cpp.o CMakeFiles/HW2.dir/Triangle.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/HW2.dir
   POST_BUILD = :

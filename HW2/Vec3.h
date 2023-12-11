@@ -21,7 +21,8 @@ public:
     Vec3 cross(const Vec3 &other);
     Vec3 operator+(const Vec3 &other);
     Vec3 operator-(const Vec3 &other);
-    Vec3 Vec3::operator*(const Vec3 &other);
+    Vec3 operator-();
+    Vec3 operator*(const Vec3 &other);
     Vec3 unit();
 
     friend std::ostream &operator<<(std::ostream &os, const Vec3 &v);

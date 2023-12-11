@@ -11,21 +11,25 @@
 
 #include "Vec3.h"
 
+#include <iostream>
+#include <vector>
+
 class Scene
 {
 public:
 	Color backgroundColor;
 	bool cullingEnabled;
 
-	std::vector<std::vector<Color> > image;
-	std::vector<std::vector<double> > depth;
+	std::vector<std::vector<Color>> image;
+	std::vector<std::vector<double>> depth;
 	std::vector<Camera *> cameras;
-	std::vector<Vec3 *> vertices;
+	std::vector<Vec4 *> vertices;
 	std::vector<Color *> colorsOfVertices;
 	std::vector<Scaling *> scalings;
 	std::vector<Rotation *> rotations;
 	std::vector<Translation *> translations;
 	std::vector<Mesh *> meshes;
+
 
 	Scene(const char *xmlPath);
 
@@ -34,8 +38,15 @@ public:
 	int makeBetweenZeroAnd255(double value);
 	void writeImageToPPMFile(Camera *camera);
 	void convertPPMToPNG(std::string ppmFileName);
-    void forwardRenderingPipeline(Camera *camera, bool isWireFrame, bool cullingEnabled);
-	Vec3 calculateNormalOfTriangle(int v1, int v2, int v3);
+	void forwardRenderingPipeline(Camera *camera);
+	/******************************************************************/
+	Vec4 calculateNormalOfTriangle(int v1, int v2, int v3);
+	void transformMesh(Mesh *mesh, std::vector<Triangle *> &triangles);
+	Matrix4 calculateCameraTransformationMatrix(Camera *camera);
+	Matrix4 viewingMatrix(Camera *camera);
+	void backfaceCullTriangles(std::vector<Triangle *> &triangles, Camera *camera);
 };
+
+void cullTriangles(std::vector<Triangle *> &triangles);
 
 #endif

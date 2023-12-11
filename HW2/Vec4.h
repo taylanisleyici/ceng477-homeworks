@@ -13,7 +13,14 @@ public:
     Vec4(double x, double y, double z, double t, int colorId);
     Vec4(const Vec4 &other);
 
+    Vec4 operator*(const Vec4 &other);
+    Vec4 operator+(const Vec4 &other);
+    Vec4 operator-(const Vec4 &other);
+    Vec4 operator-();
+    Vec4 unit();
     double getNthComponent(int n);
+    double magnitude();
+    void toHomogenous();
 
     friend std::ostream &operator<<(std::ostream &os, const Vec4 &v);
 };

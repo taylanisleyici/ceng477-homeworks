@@ -13,6 +13,8 @@ public:
     Scaling();
     Scaling(int scalingId, double sx, double sy, double sz);
     friend std::ostream &operator<<(std::ostream &os, const Scaling &s);
+
+    void findScalingMatrix();
 };
 
 #endif

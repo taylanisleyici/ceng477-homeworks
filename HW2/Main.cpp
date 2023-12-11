@@ -8,15 +8,16 @@ Scene *scene;
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-    {
-        cout << "Please run the rasterizer as:" << endl
-             << "\t./rasterizer <input_file_name>" << endl;
-        return 1;
-    }
-    else
-    {
-        const char *xmlPath = argv[1];
+    // if (argc != 2)
+    // {
+    //     cout << "Please run the rasterizer as:" << endl
+    //          << "\t./rasterizer <input_file_name>" << endl;
+    //     return 1;
+    // }
+    // else
+    // {
+        // const char *xmlPath = argv[1];
+        const char *xmlPath = "./inputs_outputs/culling_enabled_inputs/empty_box.xml";
 
         scene = new Scene(xmlPath);
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
             scene->initializeImage(scene->cameras[i]);
 
             // do forward rendering pipeline operations
-            scene->forwardRenderingPipeline(scene->cameras[i], false, false); // TODO
+            scene->forwardRenderingPipeline(scene->cameras[i]); // TODO
 
             // generate PPM file
             scene->writeImageToPPMFile(scene->cameras[i]);
@@ -36,6 +37,6 @@ int main(int argc, char *argv[])
             scene->convertPPMToPNG(scene->cameras[i]->outputFilename);
         }
 
-        return 0;
-    }
+    //     return 0;
+    // }
 }

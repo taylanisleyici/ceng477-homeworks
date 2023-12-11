@@ -82,5 +82,11 @@
   "command": "/usr/bin/g++ -g -std=gnu++11 -o CMakeFiles/HW2.dir/Transformation.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW2/Transformation.cpp",
   "file": "/home/taylan/repos/ceng477-homeworks/HW2/Transformation.cpp",
   "output": "CMakeFiles/HW2.dir/Transformation.cpp.o"
+},
+{
+  "directory": "/home/taylan/repos/ceng477-homeworks/HW2/build",
+  "command": "/usr/bin/g++ -g -std=gnu++11 -o CMakeFiles/HW2.dir/Triangle.cpp.o -c /home/taylan/repos/ceng477-homeworks/HW2/Triangle.cpp",
+  "file": "/home/taylan/repos/ceng477-homeworks/HW2/Triangle.cpp",
+  "output": "CMakeFiles/HW2.dir/Triangle.cpp.o"
 }
 ]

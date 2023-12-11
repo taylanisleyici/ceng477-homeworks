@@ -2,17 +2,18 @@
 #include <iostream>
 #include "Rotation.h"
 #include "math.h"
+#include "Translation.h"
+#include "Helpers.h"
 
 using namespace std;
 
 Rotation::Rotation()
 {
-    // this->rotationId = -1;
-    // this->angle = 0;
-    // this->ux = 0;
-    // this->uy = 0;
-    // this->uz = 0;
-    Rotation(-1, 0, 0, 0, 0);
+    this->rotationId = -1;
+    this->angle = 0;
+    this->u.x = 0;
+    this->u.y = 0;
+    this->u.z = 0;
 }
 
 Rotation::Rotation(int rotationId, double angle, double x, double y, double z)
@@ -22,22 +23,22 @@ Rotation::Rotation(int rotationId, double angle, double x, double y, double z)
     this->u.x = x;
     this->u.y = y;
     this->u.z = z;
-    this->homogenous = this->findRotationMatrix();
+    this->findRotationMatrix();
 }
 
-Matrix4 Rotation::findRotationMatrix()
+void Rotation::findRotationMatrix()
 {
     Vec3 unitU = u.unit();
-    double minOfU = min(unitU.x, min(unitU.y, unitU.z));
+    double minOfU = min(abs(unitU.x), min(abs(unitU.y), abs(unitU.z)));
 
     Vec3 v = unitU;
-    if (minOfU == unitU.x)
+    if (minOfU == abs(unitU.x))
     {
         v.x = 0;
         swap(v.y, v.z);
         v.y = -v.y;
     }
-    else if (minOfU == unitU.y)
+    else if (minOfU == abs(unitU.y))
     {
         v.y = 0;
         swap(v.x, v.z);
@@ -49,34 +50,32 @@ Matrix4 Rotation::findRotationMatrix()
         swap(v.x, v.y);
         v.x = -v.x;
     }
-    
+
     Vec3 w = unitU * v;
-    v = v.unit();
-    w = w.unit();
-    Matrix4 M;
-    M[0][0] = unitU.x;
-    M[0][1] = unitU.y;
-    M[0][2] = unitU.z;
-    M[0][3] = 0;
-    M[1][0] = v.x;
-    M[1][1] = v.y;
-    M[1][2] = v.z;
-    M[1][3] = 0;
-    M[2][0] = w.x;
-    M[2][1] = w.y;
-    M[2][2] = w.z;
-    M[2][3] = 0;
-    M[3][3] = 1;
+    Matrix4 m;
+    m[0][0] = u.x;
+    m[0][1] = u.y;
+    m[0][2] = u.z;
+    m[0][3] = 0;
+    m[1][0] = v.x;
+    m[1][1] = v.y;
+    m[1][2] = v.z;
+    m[2][0] = w.x;
+    m[2][1] = w.y;
+    m[2][2] = w.z;
+    m[3][3] = 1;
+    Matrix4 tM(m);
 
-    Matrix4 R;
-    R[0][0] = 1;
-    R[1][1] = cos(angle);
-    R[1][2] = -sin(angle);
-    R[2][1] = sin(angle);
-    R[2][2] = cos(angle);
-    R[3][3] = 1;
+    Matrix4 m2 = m.transpose();
 
-    return M.transpose() * R * M;
+
+    double rx[4][4] = {{1, 0, 0, 0}, {0, cos(this->angle * M_PI / 180), -sin(this->angle * M_PI / 180), 0}, {0, sin(this->angle * M_PI / 180), cos(this->angle * M_PI / 180), 0}, {0, 0, 0, 1}};
+    Matrix4 TRx(rx);
+    
+    this->homogenous = m2 * TRx * tM;
+    
+    /***/
+    // this->homogenous = getIdentityMatrix();
 }
 
 std::ostream &operator<<(std::ostream &os, const Rotation &r)

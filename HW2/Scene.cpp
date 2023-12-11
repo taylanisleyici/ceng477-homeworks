@@ -113,13 +113,14 @@ Scene::Scene(const char *xmlPath)
 
 	while (vertexElement != NULL)
 	{
-		Vec3 *vertex = new Vec3();
+		Vec4 *vertex = new Vec4();
 		Color *color = new Color();
 
 		vertex->colorId = vertexId;
 
 		str = vertexElement->Attribute("position");
 		sscanf(str, "%lf %lf %lf", &vertex->x, &vertex->y, &vertex->z);
+		vertex->t = 1;
 
 		str = vertexElement->Attribute("color");
 		sscanf(str, "%lf %lf %lf", &color->r, &color->g, &color->b);
@@ -144,6 +145,7 @@ Scene::Scene(const char *xmlPath)
 		str = translationElement->Attribute("value");
 		sscanf(str, "%lf %lf %lf", &translation->tx, &translation->ty, &translation->tz);
 
+		translation->findTranslationMatrix();
 		this->translations.push_back(translation);
 
 		translationElement = translationElement->NextSiblingElement("Translation");
@@ -160,6 +162,7 @@ Scene::Scene(const char *xmlPath)
 		str = scalingElement->Attribute("value");
 		sscanf(str, "%lf %lf %lf", &scaling->sx, &scaling->sy, &scaling->sz);
 
+		scaling->findScalingMatrix();
 		this->scalings.push_back(scaling);
 
 		scalingElement = scalingElement->NextSiblingElement("Scaling");
@@ -175,7 +178,7 @@ Scene::Scene(const char *xmlPath)
 		rotationElement->QueryIntAttribute("id", &rotation->rotationId);
 		str = rotationElement->Attribute("value");
 		sscanf(str, "%lf %lf %lf %lf", &rotation->angle, &rotation->u.x, &rotation->u.y, &rotation->u.z);
-
+		rotation->findRotationMatrix();
 		this->rotations.push_back(rotation);
 
 		rotationElement = rotationElement->NextSiblingElement("Rotation");
@@ -238,8 +241,8 @@ Scene::Scene(const char *xmlPath)
 
 			if (result != EOF)
 			{
-				
-				mesh->triangles.push_back(Triangle(v1, v2, v3, this->calculateNormalOfTriangle(v1, v2, v3)));
+
+				mesh->triangles.push_back(Triangle(*vertices[v1 - 1], *vertices[v2 - 1], *vertices[v3 - 1], v1, v2, v3));
 			}
 			row = strtok(NULL, "\n");
 		}
@@ -350,12 +353,210 @@ void Scene::convertPPMToPNG(string ppmFileName)
 /*
 	Transformations, clipping, culling, rasterization are done here.
 */
-void Scene::forwardRenderingPipeline(Camera *camera, bool isWireFrame, bool cullingEnabled)
+void Scene::forwardRenderingPipeline(Camera *camera)
 {
-	// TODO: Implement this function
+	vector<Triangle *> transformedTriangles;
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		/*
+		 * Modeling transformations.
+		 */
+		transformMesh(meshes[i], transformedTriangles);
+	}
+	/*
+	 * Camera, projection transformations.
+	 */
+	Matrix4 cameraTransformationMatrix = calculateCameraTransformationMatrix(camera);
+
+	for (int i = 0; i < transformedTriangles.size(); i++)
+	{
+		transformedTriangles[i]->vertices[0] = cameraTransformationMatrix * transformedTriangles[i]->vertices[0];
+		transformedTriangles[i]->vertices[1] = cameraTransformationMatrix * transformedTriangles[i]->vertices[1];
+		transformedTriangles[i]->vertices[2] = cameraTransformationMatrix * transformedTriangles[i]->vertices[2];
+		transformedTriangles[i]->calculateNormal();
+	}
+
+	/*
+	 * Clipping, it should be performed before culling.
+	 */
+
+	for (int i = transformedTriangles.size() - 1; i >= 0; i--)
+	{
+		Triangle *triangle = transformedTriangles[i];
+		
+	}
+
+	/*
+	 * Normalizing vertices.
+	 */
+
+	for (int i = 0; i < transformedTriangles.size(); i++)
+	{
+		transformedTriangles[i]->vertices[0].toHomogenous();
+		transformedTriangles[i]->vertices[1].toHomogenous();
+		transformedTriangles[i]->vertices[2].toHomogenous();
+	}
+
+	/*
+	 * Culling (not backface culling :) )
+	 */
+
+	cullTriangles(transformedTriangles);
+
+	if (this->cullingEnabled)
+	{
+		backfaceCullTriangles(transformedTriangles, camera);
+	}
+
+	for (int i = 0; i < transformedTriangles.size(); i++)
+	{
+		cout << *transformedTriangles[i] << endl;
+	}
+	cout << "-------------------------------------" << endl;
 }
 
-Vec3 Scene::calculateNormalOfTriangle(int v1, int v2, int v3)
+Vec4 Scene::calculateNormalOfTriangle(int v1, int v2, int v3)
 {
-	return (*this->vertices[v2-1] - *this->vertices[v1 - 1]) * (*this->vertices[v3 - 1] - *this->vertices[v1 - 1]);
+	return (*this->vertices[v2 - 1] - *this->vertices[v1 - 1]) * (*this->vertices[v3 - 1] - *this->vertices[v1 - 1]);
+}
+
+void Scene::transformMesh(Mesh *mesh, vector<Triangle *> &triangles)
+{
+	for (int i = mesh->triangles.size() - 1; i >= 0; i--)
+	{
+		Triangle *newTriangle = new Triangle(mesh->triangles[i]);
+		for (int j = 0; j < mesh->transformationIds.size(); j++)
+		{
+			Transformation *transformation;
+			if (mesh->transformationTypes[j] == 'r')
+			{
+				transformation = this->rotations[mesh->transformationIds[j] - 1];
+			}
+			else if (mesh->transformationTypes[j] == 's')
+			{
+				transformation = this->scalings[mesh->transformationIds[j] - 1];
+			}
+			else if (mesh->transformationTypes[j] == 't')
+			{
+				transformation = this->translations[mesh->transformationIds[j] - 1];
+			}
+			newTriangle->vertices[0] = transformation->transform(newTriangle->vertices[0]);
+			newTriangle->vertices[1] = transformation->transform(newTriangle->vertices[1]);
+			newTriangle->vertices[2] = transformation->transform(newTriangle->vertices[2]);
+		}
+		newTriangle->calculateNormal();
+		triangles.push_back(newTriangle);
+	}
+}
+
+Matrix4 Scene::calculateCameraTransformationMatrix(Camera *camera)
+{
+	Vec3 u = camera->gaze * camera->v;
+	Vec3 v = u * camera->gaze;
+	Vec3 w = -camera->gaze;
+	u = u.unit();
+	v = v.unit();
+	w = w.unit();
+	Translation t = Translation(0, -camera->position.x, -camera->position.y, -camera->position.z);
+	Transformation r;
+	double homogenous[4][4] = {{u.x, u.y, u.z, 0},
+							   {v.x, v.y, v.z, 0},
+							   {w.x, w.y, w.z, 0},
+							   {0, 0, 0, 1}};
+	r.homogenous = Matrix4(homogenous);
+	Matrix4 mcam = r.homogenous * t.homogenous;
+
+	double morthArr[4][4] = {
+		{2.0 / (camera->right - camera->left), 0, 0, -((double)(camera->right + camera->left) / (double)(camera->right - camera->left))},
+		{0, 2.0 / (camera->top - camera->bottom), -((double)(camera->top + camera->bottom) / (double)(camera->top - camera->bottom))},
+		{0, 0, -2.0 / (camera->far - camera->near), -((double)(camera->far + camera->near) / (double)(camera->far - camera->near))},
+		{0, 0, 0, 1}};
+	Matrix4 morth(morthArr);
+	Matrix4 mper;
+
+	if (camera->projectionType == PERSPECTIVE_PROJECTION)
+	{
+		double mp2oArr[4][4] = {
+			{camera->near, 0, 0, 0},
+			{0, camera->near, 0, 0},
+			{0, 0, camera->near + camera->far, camera->near * camera->far},
+			{0, 0, -1, 0}};
+		Matrix4 mp2o(mp2oArr);
+		mper = morth * mp2o;
+	}
+	else
+	{
+		mper = morth;
+	}
+
+	return mper * mcam;
+}
+
+Matrix4 Scene::viewingMatrix(Camera *camera)
+{
+
+	double vp[4][4] = {
+		{(double)camera->horRes / 2.0, 0, 0, ((double)camera->horRes - 1.0) / 2.0},
+		{0, (double)camera->verRes / 2.0, 0, ((double)camera->verRes - 1.0) / 2.0},
+		{0, 0, 0.5, 0.5},
+		{0, 0, 0, 1}};
+	return Matrix4(vp);
+}
+
+void Scene::backfaceCullTriangles(vector<Triangle *> &triangles, Camera *camera)
+{
+	for (int i = triangles.size() - 1; i >= 0; i--)
+	{
+		Vec3 normal = triangles[i]->normal;
+		Vec3 gaze = camera->gaze;
+		if (dotProductVec3(normal, gaze) > EPSILON)
+		{
+			triangles.erase(triangles.begin() + i);
+		}
+	}
+}
+
+void cullTriangles(vector<Triangle *> &triangles)
+{
+	for (int i = triangles.size() - 1; i >= 0; i--)
+	{
+		if (triangles[i]->vertices[0].x > 1 && triangles[i]->vertices[1].x > 1 && triangles[i]->vertices[2].x > 1 || triangles[i]->vertices[0].x < -1 && triangles[i]->vertices[1].x < -1 && triangles[i]->vertices[2].x < -1 || triangles[i]->vertices[0].y > 1 && triangles[i]->vertices[1].y > 1 && triangles[i]->vertices[2].y > 1 || triangles[i]->vertices[0].y < -1 && triangles[i]->vertices[1].y < -1 && triangles[i]->vertices[2].y < -1 ||
+			triangles[i]->vertices[0].z > 1 && triangles[i]->vertices[1].z > 1 && triangles[i]->vertices[2].z > 1)
+		{
+			triangles.erase(triangles.begin() + i);
+		}
+	}
+}
+
+bool visible(double den, double num, double te, double tl)
+{
+	if (den > 0)
+	{
+		double t = num / den;
+		if (t > tl)
+		{
+			return false;
+		}
+		else if (t > te)
+		{
+			te = t;
+		}
+	}
+	else if (den < 0)
+	{
+		double t = num / den;
+		if (t < te)
+		{
+			return false;
+		}
+		else if (t < tl)
+		{
+			tl = t;
+		}
+	}
+	else if (num > 0)
+	{
+		return false;
+	}
+	return true;
 }

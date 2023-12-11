@@ -5,7 +5,7 @@
 #include "Transformation.h"
 #include "Vec3.h"
 
-class Rotation : Transformation
+class Rotation : public Transformation
 {
 public:
     int rotationId;
@@ -13,7 +13,7 @@ public:
     Vec3 u;
 
     Rotation();
-    Matrix4 findRotationMatrix();
+    void findRotationMatrix();
     Rotation(int rotationId, double angle, double x, double y, double z);
     friend std::ostream &operator<<(std::ostream &os, const Rotation &r);
 };

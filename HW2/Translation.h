@@ -4,7 +4,7 @@
 #include "Matrix4.h"
 #include "Transformation.h"
 
-class Translation : Transformation
+class Translation : public Transformation
 {
 public:
     int translationId;
@@ -13,6 +13,9 @@ public:
     Translation();
     Translation(int translationId, double tx, double ty, double tz);
     friend std::ostream &operator<<(std::ostream &os, const Translation &t);
+
+    /***************************************************/
+    void findTranslationMatrix();
 };
 
 #endif
