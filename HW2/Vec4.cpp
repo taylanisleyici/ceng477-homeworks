@@ -134,3 +134,13 @@ Vec4 Vec4::unit()
         this->z / mag,
         this->t, this->colorId};
 }
+
+bool Vec4::operator==(const Vec4 &other)
+{
+    return abs(this->x - other.x) < 0.000001 && abs(this->y - other.y) < 0.000001 && abs(this->z - other.z) < 0.000001 && abs(this->t - other.t) < 0.000001;
+}
+
+bool Vec4::operator!=(const Vec4 &other)
+{
+    return !(*this == other);
+}

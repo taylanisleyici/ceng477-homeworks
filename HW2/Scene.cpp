@@ -242,7 +242,7 @@ Scene::Scene(const char *xmlPath)
 			if (result != EOF)
 			{
 
-				mesh->triangles.push_back(Triangle(*vertices[v1 - 1], *vertices[v2 - 1], *vertices[v3 - 1], v1, v2, v3));
+				mesh->triangles.push_back(Triangle(*vertices[v1 - 1], *vertices[v2 - 1], *vertices[v3 - 1], v1, v2, v3, mesh->type == SOLID_MESH));
 			}
 			row = strtok(NULL, "\n");
 		}
@@ -373,17 +373,6 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 		transformedTriangles[i]->vertices[0] = cameraTransformationMatrix * transformedTriangles[i]->vertices[0];
 		transformedTriangles[i]->vertices[1] = cameraTransformationMatrix * transformedTriangles[i]->vertices[1];
 		transformedTriangles[i]->vertices[2] = cameraTransformationMatrix * transformedTriangles[i]->vertices[2];
-		transformedTriangles[i]->calculateNormal();
-	}
-
-	/*
-	 * Clipping, it should be performed before culling.
-	 */
-
-	for (int i = transformedTriangles.size() - 1; i >= 0; i--)
-	{
-		Triangle *triangle = transformedTriangles[i];
-		
 	}
 
 	/*
@@ -392,6 +381,7 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 
 	for (int i = 0; i < transformedTriangles.size(); i++)
 	{
+		transformedTriangles[i]->calculateNormal();
 		transformedTriangles[i]->vertices[0].toHomogenous();
 		transformedTriangles[i]->vertices[1].toHomogenous();
 		transformedTriangles[i]->vertices[2].toHomogenous();
@@ -406,6 +396,47 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	if (this->cullingEnabled)
 	{
 		backfaceCullTriangles(transformedTriangles, camera);
+	}
+
+	/*
+	 * Clipping
+	 */
+	Matrix4 viewPortMatrix = viewingMatrix(camera);
+
+	for (int i = transformedTriangles.size() - 1; i >= 0; i--)
+	{
+		pair<Vec4, Color> v1 = make_pair(transformedTriangles[i]->vertices[0], *colorsOfVertices[transformedTriangles[i]->vertices[0].colorId - 1]);
+		pair<Vec4, Color> v1_ = make_pair(transformedTriangles[i]->vertices[0], *colorsOfVertices[transformedTriangles[i]->vertices[0].colorId - 1]); // clipping will change v1 and apperantly we need to v1s for two different triangles.
+		pair<Vec4, Color> v2 = make_pair(transformedTriangles[i]->vertices[1], *colorsOfVertices[transformedTriangles[i]->vertices[1].colorId - 1]);
+		pair<Vec4, Color> v3 = make_pair(transformedTriangles[i]->vertices[2], *colorsOfVertices[transformedTriangles[i]->vertices[2].colorId - 1]);
+
+		bool clip1 = clipEdge(v1, v2);
+		bool clip2 = clipEdge(v2, v3);
+		bool clip3 = clipEdge(v3, v1_);
+
+		if (transformedTriangles[i]->isSolid)
+		{
+			if (v1.first != v1_.first)
+			{
+				drawTriangle(v1, v2, v3, viewPortMatrix);
+			}
+			drawTriangle(v1_, v2, v3, viewPortMatrix);
+		}
+		else
+		{
+			if (clip1)
+			{
+				rasterize(v1, v2, viewPortMatrix);
+			}
+			if (clip2)
+			{
+				rasterize(v2, v3, viewPortMatrix);
+			}
+			if (clip3)
+			{
+				rasterize(v3, v1_, viewPortMatrix);
+			}
+		}
 	}
 
 	for (int i = 0; i < transformedTriangles.size(); i++)
@@ -499,19 +530,20 @@ Matrix4 Scene::viewingMatrix(Camera *camera)
 		{(double)camera->horRes / 2.0, 0, 0, ((double)camera->horRes - 1.0) / 2.0},
 		{0, (double)camera->verRes / 2.0, 0, ((double)camera->verRes - 1.0) / 2.0},
 		{0, 0, 0.5, 0.5},
-		{0, 0, 0, 1}};
+		{0, 0, 0, 0}};
 	return Matrix4(vp);
 }
 
 void Scene::backfaceCullTriangles(vector<Triangle *> &triangles, Camera *camera)
 {
-	for (int i = triangles.size() - 1; i >= 0; i--)
+	for (int i = 0; i < triangles.size(); i++)
 	{
 		Vec3 normal = triangles[i]->normal;
-		Vec3 gaze = camera->gaze;
-		if (dotProductVec3(normal, gaze) > EPSILON)
+		Vec3 cameraToTriangle = Vec3(triangles[i]->vertices[0].x - camera->position.x, triangles[i]->vertices[0].y - camera->position.y, triangles[i]->vertices[0].z - camera->position.z);
+		if (dotProductVec3(normal, cameraToTriangle) > 0)
 		{
 			triangles.erase(triangles.begin() + i);
+			i--;
 		}
 	}
 }
@@ -528,7 +560,7 @@ void cullTriangles(vector<Triangle *> &triangles)
 	}
 }
 
-bool visible(double den, double num, double te, double tl)
+bool visible(double den, double num, double &te, double &tl)
 {
 	if (den > 0)
 	{
@@ -559,4 +591,200 @@ bool visible(double den, double num, double te, double tl)
 		return false;
 	}
 	return true;
+}
+
+bool Scene::clipEdge(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2)
+{
+	double te = 0;
+	double tl = 1;
+	double dx = v2.first.x - v1.first.x;
+	double dy = v2.first.y - v1.first.y;
+	double dz = v2.first.z - v1.first.z;
+	double num, den;
+	if (dx == 0 && (v1.first.x < -1 || v1.first.x > 1))
+	{
+		return false;
+	}
+	if (dy == 0 && (v1.first.y < -1 || v1.first.y > 1))
+	{
+		return false;
+	}
+	if (dz == 0 && (v1.first.z < -1 || v1.first.z > 1))
+	{
+		return false;
+	}
+
+	if (!visible(dx, -1 - v1.first.x, te, tl))
+	{
+		return false;
+	}
+
+	if (!visible(-dx, v1.first.x - 1, te, tl))
+	{
+		return false;
+	}
+
+	if (!visible(dy, -1 - v1.first.y, te, tl))
+	{
+		return false;
+	}
+
+	if (!visible(-dy, v1.first.y - 1, te, tl))
+	{
+		return false;
+	}
+
+	if (!visible(dz, -1 - v1.first.z, te, tl))
+	{
+		return false;
+	}
+
+	if (!visible(-dz, v1.first.z - 1, te, tl))
+	{
+		return false;
+	}
+	if (tl < 1)
+	{
+		v2.first.x = v1.first.x + tl * dx;
+		v2.first.y = v1.first.y + tl * dy;
+		v2.first.z = v1.first.z + tl * dz;
+		v2.second.r = v1.second.r + tl * (v2.second.r - v1.second.r);
+		v2.second.g = v1.second.g + tl * (v2.second.g - v1.second.g);
+		v2.second.b = v1.second.b + tl * (v2.second.b - v1.second.b);
+	}
+	if (te > 0)
+	{
+		v1.first.x = v1.first.x + te * dx;
+		v1.first.y = v1.first.y + te * dy;
+		v1.first.z = v1.first.z + te * dz;
+		v1.second.r = v1.second.r + te * (v2.second.r - v1.second.r);
+		v1.second.g = v1.second.g + te * (v2.second.g - v1.second.g);
+		v1.second.b = v1.second.b + te * (v2.second.b - v1.second.b);
+	}
+	return true;
+}
+
+void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &viewPortMatrix)
+{
+	Vec4 v1_ = viewPortMatrix * v1.first;
+	Vec4 v2_ = viewPortMatrix * v2.first;
+	Color v1c = v1.second;
+	Color v2c = v2.second;
+	int x0 = v1_.x + 0.5;
+	int y0 = v1_.y + 0.5;
+	int x1 = v2_.x + 0.5;
+	int y1 = v2_.y + 0.5;
+	bool steep = abs(y1 - y0) > abs(x1 - x0);
+	if (steep)
+	{
+		std::swap(x0, y0);
+		std::swap(x1, y1);
+	}
+	if (x0 > x1)
+	{
+		std::swap(x0, x1);
+		std::swap(y0, y1);
+		std::swap(v1c, v2c);
+	}
+	int dx = x1 - x0;
+	int dy = abs(y1 - y0);
+	int error = dx / 2;
+	int ystep = (y0 < y1) ? 1 : -1;
+	int y = y0;
+	Color c = v1c;
+	Color dc;
+	int steps = x1 - x0;
+	dc.r = (v2c.r - v1c.r) / steps;
+	dc.g = (v2c.g - v1c.g) / steps;
+	dc.b = (v2c.b - v1c.b) / steps;
+	for (int x = x0; x <= x1; x++)
+	{
+		if (x < 0 || x >= this->image.size() || y < 0 || y >= this->image[0].size())
+		{
+			continue;
+		}
+		double depth = v1_.z + (v2_.z - v1_.z) * (double)(x - x0) / (double)(x1 - x0);
+		if (steep)
+		{
+			if (depth > this->depth[y][x])
+			{
+				continue;
+			}
+			assignColorToPixel(y, x, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
+			this->depth[y][x] = depth;
+		}
+		else
+		{
+			if (depth > this->depth[x][y])
+			{
+				continue;
+			}
+			assignColorToPixel(x, y, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
+			this->depth[x][y] = depth;
+		}
+		error -= dy;
+		if (error < 0)
+		{
+			y += ystep;
+			error += dx;
+		}
+		c.r += dc.r;
+		c.g += dc.g;
+		c.b += dc.b;
+	}
+}
+
+void Scene::drawTriangle(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, pair<Vec4, Color> &v3, Matrix4 &viewPortMatrix)
+{
+	Vec4 v0_ = viewPortMatrix * v1.first;
+	Vec4 v1_ = viewPortMatrix * v2.first;
+	Vec4 v2_ = viewPortMatrix * v3.first;
+	Color v1c = v1.second;
+	Color v2c = v2.second;
+	Color v3c = v3.second;
+	int ymin = min(v0_.y, min(v1_.y, v2_.y)) + 0.5;
+	int ymax = max(v0_.y, max(v1_.y, v2_.y)) + 0.5;
+	int xmin = min(v0_.x, min(v1_.x, v2_.x)) + 0.5;
+	int xmax = max(v0_.x, max(v1_.x, v2_.x)) + 0.5;
+	double alphaDivider = v0_.x * (v1_.y - v2_.y) + v0_.y * (v2_.x - v1_.x) + v1_.x * v2_.y - v2_.x * v1_.y;
+	double betaDivider = v1_.x * (v2_.y - v0_.y) + v1_.y * (v0_.x - v2_.x) + v2_.x * v0_.y - v0_.x * v2_.y;
+	double gamaDivider = v2_.x * (v0_.y - v1_.y) + v2_.y * (v1_.x - v0_.x) + v0_.x * v1_.y - v1_.x * v0_.y;
+	for (int y = ymin; y <= ymax; y++)
+	{
+		if (y < 0 || y >= this->image[0].size())
+		{
+			continue;
+		}
+		for (int x = xmin; x <= xmax; x++)
+		{
+			if (x < 0 || x >= this->image.size())
+			{
+				continue;
+			}
+			double f12 = x * (v1_.y - v2_.y) + y * (v2_.x - v1_.x) + v1_.x * v2_.y - v2_.x * v1_.y;
+			double f20 = x * (v2_.y - v0_.y) + y * (v0_.x - v2_.x) + v2_.x * v0_.y - v0_.x * v2_.y;
+			double f01 = x * (v0_.y - v1_.y) + y * (v1_.x - v0_.x) + v0_.x * v1_.y - v1_.x * v0_.y;
+			double alpha = f12 / alphaDivider;
+			double beta = f20 / betaDivider;
+			double gama = f01 / gamaDivider;
+			double depthOfPixel = alpha * v0_.z + beta * v1_.z + gama * v2_.z;
+			if (depthOfPixel > 1)
+			{
+				cout << "WTF" << endl;
+			}
+			if (alpha >= 0 && beta >= 0 && gama >= 0)
+			{
+				if (depthOfPixel > this->depth[x][y])
+				{
+					continue;
+				}
+				Color c;
+				c.r = makeBetweenZeroAnd255(alpha * v1c.r + beta * v2c.r + gama * v3c.r);
+				c.g = makeBetweenZeroAnd255(alpha * v1c.g + beta * v2c.g + gama * v3c.g);
+				c.b = makeBetweenZeroAnd255(alpha * v1c.b + beta * v2c.b + gama * v3c.b);
+				this->depth[x][y] = depthOfPixel;
+				assignColorToPixel(x, y, c);
+			}
+		}
+	}
 }

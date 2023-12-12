@@ -35,14 +35,15 @@ Triangle::Triangle(const Triangle &other)
     this->vertices[0] = other.vertices[0];
     this->vertices[1] = other.vertices[1];
     this->vertices[2] = other.vertices[2];
+    this->isSolid = other.isSolid;
 }
 
 Triangle::Triangle()
 {
-    Triangle(Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), -1, -1, -1);
+    Triangle(Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), -1, -1, -1, false);
 }
 
-Triangle::Triangle(Vec4 v1, Vec4 v2, Vec4 v3, int vid1, int vid2, int vid3)
+Triangle::Triangle(Vec4 v1, Vec4 v2, Vec4 v3, int vid1, int vid2, int vid3, bool isSolid)
 {
     this->vertices[0] = v1;
     this->vertices[1] = v2;
@@ -51,6 +52,7 @@ Triangle::Triangle(Vec4 v1, Vec4 v2, Vec4 v3, int vid1, int vid2, int vid3)
     this->vertexIds[1] = vid2;
     this->vertexIds[2] = vid3;
     this->calculateNormal();
+    this->isSolid = isSolid;
 }
 
 std::ostream &operator<<(std::ostream &os, const Triangle &t)
@@ -61,6 +63,20 @@ std::ostream &operator<<(std::ostream &os, const Triangle &t)
 
 void Triangle::calculateNormal()
 {
-    Vec4 norm4 = (this->vertices[1] - this->vertices[0]) * (this->vertices[2] - this->vertices[0]).unit();
-    this->normal = Vec3(norm4.x, norm4.y, norm4.z);
+    // Vec4 v1 = this->vertices[0];
+    // Vec4 v2 = this->vertices[1];
+    // Vec4 v3 = this->vertices[2];
+
+    // Vec4 v1v2 = v2 - v1;
+    // Vec4 v1v3 = v3 - v1;
+
+    // Vec3 v1v2Vec3 = Vec3(v1v2.x, v1v2.y, v1v2.z);
+    // Vec3 v1v3Vec3 = Vec3(v1v3.x, v1v3.y, v1v3.z);
+
+    // Vec3 normal = v1v2Vec3.cross(v1v3Vec3);
+    // normal.normalize();
+
+    // this->normal = normal;
+    Vec4 normV4 = ((this->vertices[2] - this->vertices[0])*(this->vertices[1] - this->vertices[0])).unit();
+    this->normal = Vec3(normV4.x, normV4.y, normV4.z);
 }

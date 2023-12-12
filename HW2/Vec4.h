@@ -17,6 +17,8 @@ public:
     Vec4 operator+(const Vec4 &other);
     Vec4 operator-(const Vec4 &other);
     Vec4 operator-();
+    bool operator==(const Vec4 &other);
+    bool operator!=(const Vec4 &other);
     Vec4 unit();
     double getNthComponent(int n);
     double magnitude();
@@ -24,5 +26,7 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const Vec4 &v);
 };
+
+
 
 #endif

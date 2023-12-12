@@ -45,8 +45,13 @@ public:
 	Matrix4 calculateCameraTransformationMatrix(Camera *camera);
 	Matrix4 viewingMatrix(Camera *camera);
 	void backfaceCullTriangles(std::vector<Triangle *> &triangles, Camera *camera);
+	void clipTriangle(std::vector<Triangle *> &triangles, int index);
+	bool clipEdge(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2);
+	void rasterize(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, Matrix4 &viewPortMatrix);
+	void drawTriangle(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, std::pair<Vec4, Color> &v3, Matrix4 &viewPortMatrix);
 };
 
 void cullTriangles(std::vector<Triangle *> &triangles);
+bool visible(double den, double num, double &te, double &tl);
 
 #endif
