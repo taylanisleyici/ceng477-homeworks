@@ -20,7 +20,7 @@ public:
 
     void multiplyWith(const Matrix4 &other);
     
-    inline double* operator[](int index);
+    double* operator[](int index);
 };
 
 #endif
