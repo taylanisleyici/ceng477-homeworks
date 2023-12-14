@@ -439,10 +439,10 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 		}
 	}
 
-	for (int i = 0; i < transformedTriangles.size(); i++)
-	{
-		cout << *transformedTriangles[i] << endl;
-	}
+	// for (int i = 0; i < transformedTriangles.size(); i++)
+	// {
+	// 	cout << *transformedTriangles[i] << endl;
+	// }
 	cout << "-------------------------------------" << endl;
 }
 
@@ -670,10 +670,12 @@ void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &vie
 	Vec4 v2_ = viewPortMatrix * v2.first;
 	Color v1c = v1.second;
 	Color v2c = v2.second;
-	int x0 = v1_.x + 0.5;
-	int y0 = v1_.y + 0.5;
-	int x1 = v2_.x + 0.5;
-	int y1 = v2_.y + 0.5;
+	int x0 = v1_.x;
+	int y0 = v1_.y;
+	int x1 = v2_.x;
+	int y1 = v2_.y;
+	double z0 = v1_.z;
+	double z1 = v2_.z;
 	bool steep = abs(y1 - y0) > abs(x1 - x0);
 	if (steep)
 	{
@@ -684,6 +686,7 @@ void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &vie
 	{
 		std::swap(x0, x1);
 		std::swap(y0, y1);
+		std::swap(z0,z1);
 		std::swap(v1c, v2c);
 	}
 	int dx = x1 - x0;
@@ -703,7 +706,7 @@ void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &vie
 		{
 			continue;
 		}
-		double depth = v1_.z + (v2_.z - v1_.z) * (double)(x - x0) / (double)(x1 - x0);
+		double depth = z0 + (z1- z0) * (double)(x - x0) / (double)(x1 - x0);
 		if (steep)
 		{
 			if (depth > this->depth[y][x])
