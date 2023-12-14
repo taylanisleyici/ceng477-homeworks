@@ -411,7 +411,7 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 
 		if (transformedTriangles[i]->isSolid)
 		{
-			clipAndDrawTriangle(v1, v2, v3, viewPortMatrix);
+			drawTriangle(v1, v2, v3, viewPortMatrix);
 		}
 		else
 		{
@@ -762,10 +762,6 @@ void Scene::drawTriangle(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, pair<Vec4
 			double beta = f20 / betaDivider;
 			double gama = f01 / gamaDivider;
 			double depthOfPixel = alpha * v0_.z + beta * v1_.z + gama * v2_.z;
-			if (depthOfPixel > 1)
-			{
-				cout << "WTF" << endl;
-			}
 			if (alpha >= 0 && beta >= 0 && gama >= 0)
 			{
 				if (depthOfPixel > this->depth[x][y])
