@@ -406,35 +406,32 @@ void Scene::forwardRenderingPipeline(Camera *camera)
 	for (int i = transformedTriangles.size() - 1; i >= 0; i--)
 	{
 		pair<Vec4, Color> v1 = make_pair(transformedTriangles[i]->vertices[0], *colorsOfVertices[transformedTriangles[i]->vertices[0].colorId - 1]);
-		pair<Vec4, Color> v1_ = make_pair(transformedTriangles[i]->vertices[0], *colorsOfVertices[transformedTriangles[i]->vertices[0].colorId - 1]); // clipping will change v1 and apperantly we need to v1s for two different triangles.
 		pair<Vec4, Color> v2 = make_pair(transformedTriangles[i]->vertices[1], *colorsOfVertices[transformedTriangles[i]->vertices[1].colorId - 1]);
 		pair<Vec4, Color> v3 = make_pair(transformedTriangles[i]->vertices[2], *colorsOfVertices[transformedTriangles[i]->vertices[2].colorId - 1]);
 
-		bool clip1 = clipEdge(v1, v2);
-		bool clip2 = clipEdge(v2, v3);
-		bool clip3 = clipEdge(v3, v1_);
-
 		if (transformedTriangles[i]->isSolid)
 		{
-			if (v1.first != v1_.first)
-			{
-				drawTriangle(v1, v2, v3, viewPortMatrix);
-			}
-			drawTriangle(v1_, v2, v3, viewPortMatrix);
+			clipAndDrawTriangle(v1, v2, v3, viewPortMatrix);
 		}
 		else
 		{
+			pair<Vec4, Color> v1_ = make_pair(transformedTriangles[i]->vertices[0], *colorsOfVertices[transformedTriangles[i]->vertices[0].colorId - 1]); // clipping will change v1 and apperantly we need to v1s for two different triangles.
+			pair<Vec4, Color> v2_ = make_pair(transformedTriangles[i]->vertices[1], *colorsOfVertices[transformedTriangles[i]->vertices[1].colorId - 1]);
+			pair<Vec4, Color> v3_ = make_pair(transformedTriangles[i]->vertices[2], *colorsOfVertices[transformedTriangles[i]->vertices[2].colorId - 1]);
+			bool clip1 = clipEdge(v1, v2);
+			bool clip2 = clipEdge(v2_, v3);
+			bool clip3 = clipEdge(v3_, v1_);
 			if (clip1)
 			{
 				rasterize(v1, v2, viewPortMatrix);
 			}
 			if (clip2)
 			{
-				rasterize(v2, v3, viewPortMatrix);
+				rasterize(v2_, v3, viewPortMatrix);
 			}
 			if (clip3)
 			{
-				rasterize(v3, v1_, viewPortMatrix);
+				rasterize(v3_, v1_, viewPortMatrix);
 			}
 		}
 	}
@@ -539,7 +536,7 @@ void Scene::backfaceCullTriangles(vector<Triangle *> &triangles, Camera *camera)
 	for (int i = 0; i < triangles.size(); i++)
 	{
 		Vec3 normal = triangles[i]->normal;
-		Vec3 cameraToTriangle = Vec3(triangles[i]->vertices[0].x - camera->position.x, triangles[i]->vertices[0].y - camera->position.y, triangles[i]->vertices[0].z - camera->position.z);
+		Vec3 cameraToTriangle = Vec3(triangles[i]->vertices[0].x, triangles[i]->vertices[0].y, triangles[i]->vertices[0].z);
 		if (dotProductVec3(normal, cameraToTriangle) > 0)
 		{
 			triangles.erase(triangles.begin() + i);
@@ -600,19 +597,6 @@ bool Scene::clipEdge(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2)
 	double dx = v2.first.x - v1.first.x;
 	double dy = v2.first.y - v1.first.y;
 	double dz = v2.first.z - v1.first.z;
-	double num, den;
-	if (dx == 0 && (v1.first.x < -1 || v1.first.x > 1))
-	{
-		return false;
-	}
-	if (dy == 0 && (v1.first.y < -1 || v1.first.y > 1))
-	{
-		return false;
-	}
-	if (dz == 0 && (v1.first.z < -1 || v1.first.z > 1))
-	{
-		return false;
-	}
 
 	if (!visible(dx, -1 - v1.first.x, te, tl))
 	{
@@ -686,7 +670,7 @@ void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &vie
 	{
 		std::swap(x0, x1);
 		std::swap(y0, y1);
-		std::swap(z0,z1);
+		std::swap(z0, z1);
 		std::swap(v1c, v2c);
 	}
 	int dx = x1 - x0;
@@ -704,26 +688,33 @@ void Scene::rasterize(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, Matrix4 &vie
 	{
 		if (x < 0 || x >= this->image.size() || y < 0 || y >= this->image[0].size())
 		{
+			error -= dy;
+			if (error < 0)
+			{
+				y += ystep;
+				error += dx;
+			}
+			c.r += dc.r;
+			c.g += dc.g;
+			c.b += dc.b;
 			continue;
 		}
-		double depth = z0 + (z1- z0) * (double)(x - x0) / (double)(x1 - x0);
+		double depth = z0 + (z1 - z0) * (double)(x - x0) / (double)(x1 - x0);
 		if (steep)
 		{
-			if (depth > this->depth[y][x])
+			if (depth < this->depth[y][x])
 			{
-				continue;
+				assignColorToPixel(y, x, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
+				this->depth[y][x] = depth;
 			}
-			assignColorToPixel(y, x, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
-			this->depth[y][x] = depth;
 		}
 		else
 		{
-			if (depth > this->depth[x][y])
+			if (depth < this->depth[x][y])
 			{
-				continue;
+				assignColorToPixel(x, y, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
+				this->depth[x][y] = depth;
 			}
-			assignColorToPixel(x, y, Color(makeBetweenZeroAnd255(c.r), makeBetweenZeroAnd255(c.g), makeBetweenZeroAnd255(c.b)));
-			this->depth[x][y] = depth;
 		}
 		error -= dy;
 		if (error < 0)
@@ -791,3 +782,15 @@ void Scene::drawTriangle(pair<Vec4, Color> &v1, pair<Vec4, Color> &v2, pair<Vec4
 		}
 	}
 }
+
+void Scene::clipAndDrawTriangle(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, std::pair<Vec4, Color> &v3, Matrix4 &viewPortMatrix)
+{
+	// Clip the triangle using Sutherland Hodgeman Algorithm and draw the resulting triangle.
+	v1.first = viewPortMatrix * v1.first;
+	v2.first = viewPortMatrix * v2.first;
+	v3.first = viewPortMatrix * v3.first;
+	std::vector<std::pair<Vec4, Color>> input;
+	std::vector<std::pair<Vec4, Color>> output;
+	
+}
+

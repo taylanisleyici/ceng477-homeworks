@@ -49,6 +49,7 @@ public:
 	bool clipEdge(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2);
 	void rasterize(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, Matrix4 &viewPortMatrix);
 	void drawTriangle(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, std::pair<Vec4, Color> &v3, Matrix4 &viewPortMatrix);
+	void clipAndDrawTriangle(std::pair<Vec4, Color> &v1, std::pair<Vec4, Color> &v2, std::pair<Vec4, Color> &v3, Matrix4 &viewPortMatrix);
 };
 
 void cullTriangles(std::vector<Triangle *> &triangles);

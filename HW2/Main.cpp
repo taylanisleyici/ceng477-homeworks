@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
     // else
     // {
         // const char *xmlPath = argv[1];
-        const char *xmlPath = "./inputs_outputs/culling_enabled_inputs/empty_box.xml";
-
+        // const char *xmlPath = "./inputs_outputs/culling_enabled_inputs/empty_box.xml";
+        const char *xmlPath = "./inputs_outputs/clipping_example/empty_box_clipped.xml";
         scene = new Scene(xmlPath);
 
         for (int i = 0; i < scene->cameras.size(); i++)
